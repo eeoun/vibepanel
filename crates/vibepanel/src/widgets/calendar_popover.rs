@@ -3,6 +3,7 @@ use std::rc::Rc;
 use std::sync::Once;
 
 use chrono::{Datelike, Local, NaiveDate, Timelike};
+use gettextrs::{gettext};
 use gtk4::cairo;
 use gtk4::gdk::RGBA;
 use gtk4::glib::markup_escape_text;
@@ -102,7 +103,7 @@ pub fn build_clock_calendar_popover(
     today_button.add_css_class(surface::POPOVER_ICON_BTN);
     today_button.set_has_frame(false);
     today_button.set_focus_on_click(false);
-    today_button.set_tooltip_text(Some("Go to today"));
+    today_button.set_tooltip_text(Some(&gettext("Go to today")));
 
     let next_button = crate::widgets::base::vp_button_from_icon_name("go-next-symbolic");
     next_button.add_css_class(surface::POPOVER_ICON_BTN);
@@ -453,14 +454,12 @@ fn rebuild_event_list(content: &GtkBox, date: NaiveDate, snapshot: &CalendarSnap
         .get(&date)
         .filter(|events| !events.is_empty())
     else {
-        append_state_label(
-            content,
-            if snapshot.loading {
-                "Loading events..."
-            } else {
-                "No events"
-            },
-        );
+        let state_text = if snapshot.loading {
+            gettext("Loading events...")
+        } else {
+            gettext("No events")
+        };
+        append_state_label(content, &state_text);
         return;
     };
 
@@ -737,15 +736,19 @@ fn append_event_row(content: &GtkBox, event: &CalendarEvent, date: NaiveDate) {
 
 fn event_detail_text(event: &CalendarEvent, date: NaiveDate) -> String {
     let time = if event.all_day {
-        "All day".to_string()
+        gettext("All day")
     } else if date == event.start.date_naive() {
         format!("{:02}:{:02}", event.start.hour(), event.start.minute())
     } else if date != event.final_day() {
-        "Ongoing".to_string()
+        gettext("Ongoing")
     } else if event.end.time() == chrono::NaiveTime::MIN {
-        "Until midnight".to_string()
+        gettext("Until midnight")
     } else {
-        format!("Until {:02}:{:02}", event.end.hour(), event.end.minute())
+        gettext("Until {}").replacen(
+            "{}",
+            &format!("{:02}:{:02}", event.end.hour(), event.end.minute()),
+            1,
+        )
     };
     match (&event.calendar_name, &event.location) {
         (calendar, location) if !calendar.is_empty() && !location.is_empty() => {

@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use gettextrs::{gettext};
 use gtk4::gdk;
 use gtk4::gdk_pixbuf::Pixbuf;
 use gtk4::glib;
@@ -1034,7 +1035,7 @@ fn render_menu_level(state: &Rc<RefCell<WidgetState>>) {
 
     // Add back button if we're in a submenu
     if stack_len > 1 {
-        let back_btn = Button::with_label("← Back");
+        let back_btn = Button::with_label(&gettext("← Back"));
         back_btn.add_css_class(widget::TRAY_MENU_BACK);
         back_btn.add_css_class(btn::GHOST);
         let state_for_back = state.clone();
@@ -1045,7 +1046,7 @@ fn render_menu_level(state: &Rc<RefCell<WidgetState>>) {
     }
 
     if current_entries.is_empty() {
-        let empty = Label::new(Some("No menu entries"));
+        let empty = Label::new(Some(&gettext("No menu entries")));
         empty.add_css_class(color::TEXT);
         empty.add_css_class(color::MUTED);
         container.append(&empty);

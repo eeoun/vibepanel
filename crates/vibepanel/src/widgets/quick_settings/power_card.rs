@@ -15,6 +15,7 @@ use std::process::{Command, Stdio};
 use std::rc::Rc;
 use std::time::Duration;
 
+use gettextrs::{gettext};
 use gtk4::gdk::BUTTON_PRIMARY;
 use gtk4::glib::{self, SourceId};
 use gtk4::prelude::*;
@@ -498,8 +499,11 @@ pub fn build_power_card_popover(
     card_box.set_hexpand(true);
 
     // Create hold button card
-    let (overlay, progress, button, icon_handle, subtitle) =
-        create_hold_button_card("system-shutdown-symbolic", "Power", "Hold to open");
+    let (overlay, progress, button, icon_handle, subtitle) = create_hold_button_card(
+        "system-shutdown-symbolic",
+        &gettext("Power"),
+        &gettext("Hold to open"),
+    );
 
     // Store references
     *state.card_icon.borrow_mut() = Some(icon_handle);
@@ -580,7 +584,7 @@ fn create_power_popover_action(action: &'static PowerAction, command: String) ->
     hbox.append(&icon.widget());
 
     // Label
-    let label = Label::new(Some(action.label));
+    let label = Label::new(Some(&gettext(action.label)));
     label.set_xalign(0.0);
     label.set_hexpand(true);
     label.add_css_class(color::PRIMARY);
@@ -620,8 +624,8 @@ pub fn build_power_card_expander(
     // Build the card using ToggleCard pattern
     let card = ToggleCard::builder()
         .icon("system-shutdown-symbolic")
-        .label("Power")
-        .subtitle("Hold to shut down")
+        .label(&gettext("Power"))
+        .subtitle(&gettext("Hold to shut down"))
         .active(false)
         .sensitive(true)
         .icon_active(false)
@@ -752,7 +756,7 @@ fn build_power_action_row_with_command(
     hbox.append(&icon.widget());
 
     // Title using CardLabel for consistency
-    let label_result = CardLabel::new(action.label)
+    let label_result = CardLabel::new(&gettext(action.label))
         .width_chars(22)
         .title_class(row::QS_TITLE)
         .build();

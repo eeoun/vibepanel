@@ -12,6 +12,7 @@
 //! - `notifications_popover.rs`: Popover content and notification list
 //! - `notifications_common.rs`: Shared constants and helper functions
 
+use gettextrs::{gettext, ngettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Application, Box as GtkBox, Orientation, Overlay, Widget};
 use std::cell::{Cell, RefCell};
@@ -124,7 +125,7 @@ impl NotificationsWidgetInner {
             self.icon_handle.add_css_class(widget::BACKEND_UNAVAILABLE);
             tooltip_manager.set_styled_tooltip(
                 &self.container,
-                "Notification daemon unavailable (another daemon is running)",
+                &gettext("Notification daemon unavailable (another daemon is running)"),
             );
         } else {
             self.icon_handle
@@ -140,19 +141,23 @@ impl NotificationsWidgetInner {
             if count > 0 {
                 // Show unread count in tooltip (badge is just a dot)
                 let tooltip = if unread > 0 {
-                    if unread == 1 {
-                        format!("1 new notification ({} total)", count)
-                    } else {
-                        format!("{} new notifications ({} total)", unread, count)
-                    }
-                } else if count == 1 {
-                    "1 notification".to_string()
+                    ngettext(
+                        "{} new notification ({} total)",
+                        "{} new notifications ({} total)",
+                        unread as u32,
+                    )
+                    .replacen("{}", &unread.to_string(), 1)
+                    .replacen("{}", &count.to_string(), 1)
                 } else {
-                    format!("{} notifications", count)
+                    ngettext("{} notification", "{} notifications", count as u32).replacen(
+                        "{}",
+                        &count.to_string(),
+                        1,
+                    )
                 };
                 tooltip_manager.set_styled_tooltip(&self.container, &tooltip);
             } else {
-                tooltip_manager.set_styled_tooltip(&self.container, "No notifications");
+                tooltip_manager.set_styled_tooltip(&self.container, &gettext("No notifications"));
             }
         }
 
@@ -337,7 +342,7 @@ impl NotificationsWidget {
 
         base.content().append(&overlay);
 
-        base.set_tooltip("Notifications");
+        base.set_tooltip(&gettext("Notifications"));
 
         let inner = Rc::new(NotificationsWidgetInner {
             icon_handle,

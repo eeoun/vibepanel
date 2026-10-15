@@ -10,6 +10,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, CenterBox, Image, Label, Orientation};
 use tracing::{debug, trace};
@@ -672,16 +673,16 @@ fn update_tooltip(
         } else {
             &snapshot.app_id
         };
-        lines.push(format!("App: {}", app_label));
+        lines.push(gettext("App: {}").replacen("{}", app_label, 1));
     }
     if !snapshot.app_id.is_empty() {
-        lines.push(format!("ID: {}", snapshot.app_id));
+        lines.push(gettext("ID: {}").replacen("{}", &snapshot.app_id, 1));
     }
     if !snapshot.title.is_empty() {
-        lines.push(format!("Title: {}", snapshot.title));
+        lines.push(gettext("Title: {}").replacen("{}", &snapshot.title, 1));
     }
     if let Some(output) = &snapshot.output {
-        lines.push(format!("Output: {}", output));
+        lines.push(gettext("Output: {}").replacen("{}", output, 1));
     }
 
     let tooltip_text = if lines.is_empty() {

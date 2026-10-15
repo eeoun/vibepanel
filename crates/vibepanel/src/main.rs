@@ -20,6 +20,8 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::rc::Rc;
 
+use gettextrs::{TextDomain};
+
 use clap::{Parser, Subcommand};
 use gtk4::Application;
 use gtk4::prelude::*;
@@ -223,7 +225,19 @@ enum NotificationsAction {
     Unread,
 }
 
+fn init_i18n() -> Result<(), Box<dyn std::error::Error>> {
+    unsafe {
+        TextDomain::new("vibepanel").init()?;
+    }
+    Ok(())
+}
+
 fn main() -> ExitCode {
+    if let Err(err) = init_i18n() {
+        eprintln!("Failed to initialize i18n: {err}");
+        return ExitCode::FAILURE;
+    }
+
     // Return memory used by large, short-lived image decodes to the OS instead
     // of keeping it for reuse. Keep glibc's matching trim setting so smaller
     // allocations remain efficient.

@@ -1,0 +1,1318 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the vibepanel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: vibepanel\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-15 15:18+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: ../src/widgets/osd.rs:140 ../src/widgets/quick_settings/network_card.rs:223
+#: ../src/widgets/quick_settings/bluetooth_card.rs:796
+#: ../src/widgets/quick_settings/vpn_card.rs:541
+#: ../src/widgets/quick_settings/window.rs:776
+#: ../src/widgets/system_popover.rs:370
+msgid "Unavailable"
+msgstr ""
+
+#: ../src/widgets/osd.rs:341
+msgid "Play audio to enable"
+msgstr ""
+
+#: ../src/widgets/disk.rs:214
+msgid "loading"
+msgstr ""
+
+#: ../src/widgets/disk.rs:215
+msgid "unavailable"
+msgstr ""
+
+#: ../src/widgets/disk.rs:222
+#, rust-format
+msgid "Disk {}: {status}"
+msgstr ""
+
+#: ../src/widgets/disk.rs:246
+#, rust-format
+msgid ""
+"Disk {}: {:.1}%\n"
+"{} / {}\n"
+"{} free"
+msgstr ""
+
+#: ../src/widgets/battery.rs:107 ../src/widgets/battery.rs:306
+msgid "Battery: unknown"
+msgstr ""
+
+#: ../src/widgets/battery.rs:255
+msgid "Battery: Service unavailable"
+msgstr ""
+
+#: ../src/widgets/battery.rs:309 ../src/widgets/battery.rs:323
+#, rust-format
+msgid "Battery: {}"
+msgstr ""
+
+#: ../src/widgets/battery.rs:311 ../src/widgets/battery_popover.rs:46
+msgid "Charging"
+msgstr ""
+
+#: ../src/widgets/battery.rs:313 ../src/widgets/battery_popover.rs:49
+msgid "Full"
+msgstr ""
+
+#: ../src/widgets/battery.rs:315 ../src/widgets/battery_popover.rs:47
+msgid "Discharging"
+msgstr ""
+
+#: ../src/widgets/battery.rs:317
+msgid ""
+"\n"
+"State: "
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:17 ../src/widgets/battery_popover.rs:30
+#: ../src/widgets/battery_popover.rs:52 ../src/widgets/battery_popover.rs:160
+#: ../src/widgets/updates_common.rs:120
+msgid "Unknown"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:48 ../src/widgets/workspaces.rs:2074
+msgid "Empty"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:50
+msgid "Pending charge"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:51
+msgid "Pending discharge"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:88
+msgid "Power Profile"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:172
+#, rust-format
+msgid "Time until full: {}"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:179
+msgid "Time until full: Unknown"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:184
+#, rust-format
+msgid "Time remaining: {}"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:191
+msgid "Time remaining: Unknown"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:194 ../src/widgets/battery_popover.rs:197
+msgid "Time: Unknown"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:202
+#, rust-format
+msgid "Power draw: {}"
+msgstr ""
+
+#: ../src/widgets/battery_popover.rs:245
+msgid "Battery Information"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:137
+msgid "GPU: unknown"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:251 ../src/widgets/system_popover.rs:689
+msgid "Idle"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:295
+msgid "GPU: No supported GPU detected"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:310
+msgid "State: Idle (suspended)"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:312
+#, rust-format
+msgid "Usage: {:.1}%"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:314
+msgid "Usage: --"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:318
+#, rust-format
+msgid "Temp: {:.0}°C"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:322
+#, rust-format
+msgid "VRAM: {value}"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:326
+#, rust-format
+msgid "Clock: {value}"
+msgstr ""
+
+#: ../src/widgets/gpu.rs:330
+#, rust-format
+msgid "Power: {value}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:269
+msgid "Audio: Service unavailable"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:278
+msgid "Volume control unavailable"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:288
+msgid "Muted"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:290
+#, rust-format
+msgid "Volume: {}%"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:329
+msgid "Bluetooth: No adapter found"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:362
+#: ../src/widgets/quick_settings/bar_widget.rs:366
+msgid "Bluetooth On"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:368
+msgid "Bluetooth Off"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:411
+msgid "Wi-Fi: Service unavailable"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:439
+msgid "Ethernet connected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:441
+#: ../src/widgets/quick_settings/network_card.rs:722
+#: ../src/widgets/quick_settings/network_card.rs:757
+#: ../src/widgets/quick_settings/network_card.rs:1187
+#: ../src/widgets/quick_settings/bluetooth_card.rs:268
+msgid "Connected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:445
+#: ../src/widgets/quick_settings/bar_widget.rs:534
+#, rust-format
+msgid ""
+"{}\n"
+"Signal: {}%"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:452
+#: ../src/widgets/quick_settings/network_card.rs:237
+#: ../src/widgets/quick_settings/network_card.rs:267
+#, rust-format
+msgid "Connecting to {}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:454
+#: ../src/widgets/quick_settings/network_card.rs:269
+#: ../src/widgets/quick_settings/network_card.rs:749
+#: ../src/widgets/quick_settings/network_card.rs:1100
+msgid "Connecting..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:456
+msgid "Wi-Fi Off"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:458
+msgid "Wi-Fi: Scanning..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:460
+#: ../src/widgets/quick_settings/network_card.rs:284
+#: ../src/widgets/quick_settings/network_card.rs:785
+#: ../src/widgets/quick_settings/vpn_card.rs:548
+#: ../src/widgets/quick_settings/window.rs:868
+msgid "Disconnected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:522
+#, rust-format
+msgid ""
+"{}\n"
+"Off"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:524
+#, rust-format
+msgid ""
+"{}\n"
+"Connecting..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:526
+#, rust-format
+msgid ""
+"{}\n"
+"Connection failed"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:529
+#, rust-format
+msgid ""
+"{}\n"
+"Signal: {}%\n"
+"{}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:539
+#, rust-format
+msgid ""
+"{}\n"
+"Disconnected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:587
+msgid "VPN Connected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bar_widget.rs:592
+msgid "VPN Disconnected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/idle_inhibitor_card.rs:61
+#: ../src/widgets/quick_settings/bluetooth_card.rs:815
+#: ../src/widgets/quick_settings/window.rs:791
+#: ../src/widgets/quick_settings/window.rs:940
+msgid "Enabled"
+msgstr ""
+
+#: ../src/widgets/quick_settings/idle_inhibitor_card.rs:63
+#: ../src/widgets/quick_settings/bluetooth_card.rs:817
+#: ../src/widgets/quick_settings/window.rs:793
+#: ../src/widgets/quick_settings/window.rs:942
+msgid "Disabled"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:234
+#: ../src/widgets/quick_settings/network_card.rs:646
+msgid "Ethernet"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:252
+#, rust-format
+msgid "{} • Connecting to {}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:257
+#, rust-format
+msgid "{} • {}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:279
+#, rust-format
+msgid "{} • Connecting..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:286
+#: ../src/widgets/quick_settings/network_card.rs:742
+msgid "Off"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:496
+#: ../src/widgets/quick_settings/network_card.rs:1893
+#: ../src/widgets/quick_settings/window.rs:670
+msgid "Wi-Fi"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:577
+#: ../src/widgets/quick_settings/bluetooth_card.rs:481
+#: ../src/widgets/quick_settings/vpn_card.rs:597
+#: ../src/widgets/polkit_window.rs:146
+msgid "Cancel"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:579
+#: ../src/widgets/quick_settings/network_card.rs:882
+#: ../src/widgets/quick_settings/network_card.rs:1004
+#: ../src/widgets/quick_settings/network_card.rs:1272
+#: ../src/widgets/quick_settings/network_card.rs:1338
+#: ../src/widgets/quick_settings/bluetooth_card.rs:387
+#: ../src/widgets/quick_settings/vpn_card.rs:433
+#: ../src/widgets/quick_settings/vpn_card.rs:599
+msgid "Connect"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:661
+#: ../src/widgets/quick_settings/network_card.rs:946
+msgid "Wired Connection"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:712
+#: ../src/widgets/quick_settings/network_card.rs:714
+#, rust-format
+msgid "{} Gbps"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:717
+#, rust-format
+msgid "{} Mbps"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:804
+msgid "Mobile"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:880
+#: ../src/widgets/quick_settings/network_card.rs:1002
+#: ../src/widgets/quick_settings/network_card.rs:1324
+#: ../src/widgets/quick_settings/bluetooth_card.rs:375
+#: ../src/widgets/quick_settings/vpn_card.rs:431
+msgid "Disconnect"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1066
+msgid "Wi-Fi is disabled"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1073
+msgid "No network connections"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1081
+msgid "No networks found"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1103
+msgid "Secured"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1107
+#: ../src/widgets/quick_settings/bluetooth_card.rs:275
+msgid "Saved"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1354
+msgid "Share"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1371
+#: ../src/widgets/quick_settings/bluetooth_card.rs:400
+msgid "Forget"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1412
+#, rust-format
+msgid "Enter password for {}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1595
+msgid "Connecting"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1618
+#, rust-format
+msgid "Connecting{}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/network_card.rs:1892
+#: ../src/widgets/quick_settings/window.rs:668
+#: ../src/widgets/system_popover.rs:944
+msgid "Network"
+msgstr ""
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:44
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:63
+msgid "Share Wi-Fi"
+msgstr ""
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:74
+msgid "Close"
+msgstr ""
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:231
+msgid "Loading Wi-Fi credentials..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:260
+#, rust-format
+msgid "QR code for Wi-Fi network {ssid}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:283
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:296
+msgid "Show password"
+msgstr ""
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:299
+msgid "Hide password"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:193
+msgid "Bluetooth unavailable"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:201
+msgid "Bluetooth is disabled"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:207
+msgid "Scanning for devices..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:212
+msgid "No Bluetooth devices"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:233
+msgid "Unknown device"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:259
+msgid "Pairing..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:262
+#: ../src/widgets/quick_settings/bluetooth_card.rs:272
+msgid "Paired"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:335
+#: ../src/widgets/quick_settings/bluetooth_card.rs:497
+msgid "Pair"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:445
+#, rust-format
+msgid "Enter PIN for {device}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:448
+#, rust-format
+msgid "Enter passkey for {device}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:451
+#, rust-format
+msgid "Confirm the code matches on {device}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:454
+#: ../src/widgets/quick_settings/bluetooth_card.rs:457
+#, rust-format
+msgid "Enter the code on {device}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:495
+msgid "Confirm"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:798
+#: ../src/widgets/quick_settings/bluetooth_card.rs:806
+#: ../src/widgets/quick_settings/window.rs:778
+#: ../src/widgets/quick_settings/window.rs:786
+#: ../src/widgets/quick_settings/window.rs:801
+msgid "Bluetooth"
+msgstr ""
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:808
+#, rust-format
+msgid "{count} connected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:227
+msgid "Output Devices"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:236
+msgid "Applications"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:262
+msgid "Audio sink suspended. Play audio to enable volume control."
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:280
+#: ../src/widgets/quick_settings/audio_card.rs:356
+msgid "Audio unavailable"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:285
+msgid "No audio devices"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:298
+msgid "No audio devices available"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:361
+msgid "No application audio"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:525
+msgid "Unmute"
+msgstr ""
+
+#: ../src/widgets/quick_settings/audio_card.rs:527
+msgid "Mute"
+msgstr ""
+
+#: ../src/widgets/quick_settings/updates_card.rs:80
+msgid "Updates"
+msgstr ""
+
+#: ../src/widgets/quick_settings/updates_card.rs:160
+msgid "Refresh"
+msgstr ""
+
+#: ../src/widgets/quick_settings/updates_card.rs:231
+#: ../src/widgets/updates_common.rs:76
+#, rust-format
+msgid "Last check: {}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/updates_card.rs:262
+#: ../src/widgets/updates_common.rs:46
+#, rust-format
+msgid "Error: {}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/updates_card.rs:271
+#: ../src/widgets/updates_common.rs:50
+msgid "System is up to date"
+msgstr ""
+
+#: ../src/widgets/quick_settings/ui_helpers.rs:682
+msgid "Scan"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:331
+msgid "Loading VPN state..."
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:336
+msgid "No VPN connections"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:348
+msgid "Autoconnect"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:376
+#: ../src/widgets/workspaces.rs:2060
+msgid "Active"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:380
+msgid "Inactive"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:543
+#: ../src/widgets/quick_settings/window.rs:863
+#: ../src/widgets/quick_settings/window.rs:879
+msgid "VPN"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:551
+#: ../src/widgets/quick_settings/window.rs:871
+msgid "No connections"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:644
+#, rust-format
+msgid "Re-enter credentials for {name}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:646
+#, rust-format
+msgid "Enter credentials for {name}"
+msgstr ""
+
+#: ../src/widgets/quick_settings/vpn_card.rs:655
+msgid "Wrong password"
+msgstr ""
+
+#: ../src/widgets/quick_settings/mic_card.rs:171
+msgid "Input Devices"
+msgstr ""
+
+#: ../src/widgets/quick_settings/mic_card.rs:193
+msgid "Microphone unavailable. Check your audio settings."
+msgstr ""
+
+#: ../src/widgets/quick_settings/mic_card.rs:211
+msgid "No input devices"
+msgstr ""
+
+#: ../src/widgets/quick_settings/mic_card.rs:223
+msgid "No input devices available"
+msgstr ""
+
+#: ../src/widgets/quick_settings/window.rs:596
+msgid "Hold to confirm"
+msgstr ""
+
+#: ../src/widgets/quick_settings/window.rs:598
+#: ../src/widgets/quick_settings/window.rs:1304
+#: ../src/widgets/quick_settings/power_card.rs:627
+msgid "Hold to shut down"
+msgstr ""
+
+#: ../src/widgets/quick_settings/window.rs:788
+#, rust-format
+msgid "{} connected"
+msgstr ""
+
+#: ../src/widgets/quick_settings/window.rs:947
+msgid "Idle Inhibitor"
+msgstr ""
+
+#: ../src/widgets/quick_settings/power_card.rs:503
+#: ../src/widgets/quick_settings/power_card.rs:626
+#: ../src/widgets/system_popover.rs:620
+msgid "Power"
+msgstr ""
+
+#: ../src/widgets/quick_settings/power_card.rs:504
+msgid "Hold to open"
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:44
+msgid "Update check failed"
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:48
+msgid "Checking for updates..."
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:54
+#, rust-format
+msgid "{} update available"
+msgid_plural "{} updates available"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/updates_common.rs:83
+#, rust-format
+msgid "Last successful check: {}"
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:98
+msgid "Check failed"
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:102
+msgid "Checking..."
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:106
+msgid "Up to date"
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:110
+#, rust-format
+msgid "{} update"
+msgid_plural "{} updates"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/updates_common.rs:116
+msgid "Never"
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:126
+#: ../src/widgets/notifications_common.rs:395
+msgid "Just now"
+msgstr ""
+
+#: ../src/widgets/updates_common.rs:129
+#, rust-format
+msgid "{} minute ago"
+msgid_plural "{} minutes ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/updates_common.rs:132
+#, rust-format
+msgid "{} hour ago"
+msgid_plural "{} hours ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/updates_common.rs:135
+#, rust-format
+msgid "{} day ago"
+msgid_plural "{} days ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/media_components.rs:346 ../src/widgets/media.rs:495
+msgid "Previous"
+msgstr ""
+
+#: ../src/widgets/media_components.rs:364 ../src/widgets/media.rs:511
+msgid "Play/Pause"
+msgstr ""
+
+#: ../src/widgets/media_components.rs:380 ../src/widgets/media.rs:531
+msgid "Next"
+msgstr ""
+
+#: ../src/widgets/media_components.rs:575
+#: ../src/widgets/media_components.rs:614
+msgid "No track playing"
+msgstr ""
+
+#: ../src/widgets/media_components.rs:582
+#: ../src/widgets/media_components.rs:623
+msgid "Unknown artist"
+msgstr ""
+
+#: ../src/widgets/tray.rs:1038
+msgid "← Back"
+msgstr ""
+
+#: ../src/widgets/tray.rs:1049
+msgid "No menu entries"
+msgstr ""
+
+#: ../src/widgets/updates.rs:84
+msgid "Updates: checking..."
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:199
+#, rust-format
+msgid "{} cores"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:401
+#, rust-format
+msgid "Core {}"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:478
+#, rust-format
+msgid "{} usage. Click to show drives"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:480
+msgid "Click to show drives"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:588 ../src/widgets/system_popover.rs:840
+msgid "GPU"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:619
+msgid "VRAM"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:621
+msgid "Clock"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:744
+msgid "CPU"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:770
+msgid "-- cores"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:796
+msgid "Memory"
+msgstr ""
+
+#: ../src/widgets/system_popover.rs:874
+msgid "Disk"
+msgstr ""
+
+#: ../src/widgets/weather.rs:81 ../src/widgets/weather.rs:287
+msgid "Weather: loading..."
+msgstr ""
+
+#: ../src/widgets/weather.rs:235
+msgid "Unknown location"
+msgstr ""
+
+#: ../src/widgets/weather.rs:244
+#, rust-format
+msgid "Weather: {} · {}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:252
+#, rust-format
+msgid "Condition: {}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:254
+#, rust-format
+msgid "Feels like: {}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:261
+#, rust-format
+msgid "Humidity: {humidity}%"
+msgstr ""
+
+#: ../src/widgets/weather.rs:268
+#, rust-format
+msgid "Wind: {}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:276
+msgid "day"
+msgstr ""
+
+#: ../src/widgets/weather.rs:278
+msgid "night"
+msgstr ""
+
+#: ../src/widgets/weather.rs:280
+#, rust-format
+msgid "Light: {}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:289
+msgid "Weather: unavailable"
+msgstr ""
+
+#: ../src/widgets/weather.rs:293
+#, rust-format
+msgid "Updated: {}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:297
+msgid "Data may be stale"
+msgstr ""
+
+#: ../src/widgets/weather.rs:300 ../src/widgets/weather_popover.rs:355
+#, rust-format
+msgid "Error: {error}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:320
+#, rust-format
+msgid ", rain {value}%"
+msgstr ""
+
+#: ../src/widgets/weather.rs:323
+#, rust-format
+msgid "Forecast {}: {}, {} / {}{}"
+msgstr ""
+
+#: ../src/widgets/weather.rs:333 ../src/widgets/weather.rs:338
+msgid "just now"
+msgstr ""
+
+#: ../src/widgets/weather.rs:335 ../src/widgets/notifications_common.rs:398
+#, rust-format
+msgid "{}m ago"
+msgstr ""
+
+#: ../src/widgets/weather.rs:337 ../src/widgets/notifications_common.rs:401
+#, rust-format
+msgid "{}h ago"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:119
+#, rust-format
+msgid "Feels like {}"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:200
+msgid "Humidity"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:201
+msgid "Wind"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:204
+msgid "Precipitation"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:209
+msgid "Sunrise"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:210
+msgid "Sunset"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:211
+msgid "UV Index"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:383
+msgid "Loading weather…"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:385
+msgid "No weather data available"
+msgstr ""
+
+#: ../src/widgets/weather_popover.rs:454
+msgid "Today"
+msgstr ""
+
+#: ../src/widgets/workspaces.rs:2048 ../src/widgets/workspaces.rs:2056
+#, rust-format
+msgid "Workspace {}"
+msgstr ""
+
+#: ../src/widgets/workspaces.rs:2051
+#, rust-format
+msgid "Workspace {}: {}"
+msgstr ""
+
+#: ../src/widgets/workspaces.rs:2062
+msgid "Urgent"
+msgstr ""
+
+#: ../src/widgets/workspaces.rs:2066
+#, rust-format
+msgid "{} window"
+msgid_plural "{} windows"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/workspaces.rs:2072
+msgid "Has windows"
+msgstr ""
+
+#: ../src/widgets/polkit_window.rs:64 ../src/widgets/polkit_window.rs:95
+msgid "Authentication required"
+msgstr ""
+
+#: ../src/widgets/polkit_window.rs:148
+msgid "Authenticate"
+msgstr ""
+
+#: ../src/widgets/polkit_window.rs:271
+#, rust-format
+msgid "Authenticating as {}"
+msgstr ""
+
+#: ../src/widgets/media.rs:551 ../src/widgets/media.rs:1019
+#: ../src/widgets/media.rs:1277
+msgid "No media playing"
+msgstr ""
+
+#: ../src/widgets/media.rs:1283
+#, rust-format
+msgid "Player: {}"
+msgstr ""
+
+#: ../src/widgets/media.rs:1287 ../src/widgets/window_title.rs:682
+#, rust-format
+msgid "Title: {}"
+msgstr ""
+
+#: ../src/widgets/media.rs:1290
+#, rust-format
+msgid "Artist: {}"
+msgstr ""
+
+#: ../src/widgets/media.rs:1293
+#, rust-format
+msgid "Album: {}"
+msgstr ""
+
+#: ../src/widgets/media.rs:1297 ../src/widgets/media_popover.rs:200
+msgid "Playing"
+msgstr ""
+
+#: ../src/widgets/media.rs:1298 ../src/widgets/media_popover.rs:201
+msgid "Paused"
+msgstr ""
+
+#: ../src/widgets/media.rs:1299 ../src/widgets/media_popover.rs:202
+msgid "Stopped"
+msgstr ""
+
+#: ../src/widgets/media.rs:1301
+#, rust-format
+msgid "Status: {}"
+msgstr ""
+
+#: ../src/widgets/media.rs:1304
+msgid "Media"
+msgstr ""
+
+#: ../src/widgets/cpu.rs:151
+msgid "CPU: unknown"
+msgstr ""
+
+#: ../src/widgets/cpu.rs:247
+msgid "CPU: Service unavailable"
+msgstr ""
+
+#: ../src/widgets/cpu.rs:268
+#, rust-format
+msgid ""
+"CPU: {:.1}%\n"
+"Temp: {:.0}°C\n"
+"Cores: {}"
+msgstr ""
+
+#: ../src/widgets/cpu.rs:272
+#, rust-format
+msgid ""
+"CPU: {:.1}%\n"
+"Cores: {}"
+msgstr ""
+
+#: ../src/widgets/gpu_format.rs:24
+#, rust-format
+msgid "{} used"
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:107
+#: ../src/widgets/notifications.rs:345
+msgid "Notifications"
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:141
+#: ../src/widgets/notifications_popover.rs:167
+msgid "Unmute notifications"
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:143
+#: ../src/widgets/notifications_popover.rs:169
+msgid "Mute notifications"
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:185
+msgid "Clear all notifications"
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:222
+msgid ""
+"Another notification daemon is running.\n"
+"Disable it to use this notification center."
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:232
+#: ../src/widgets/notifications.rs:160
+msgid "No notifications"
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:390
+msgid "Dismiss"
+msgstr ""
+
+#: ../src/widgets/notifications_popover.rs:488
+msgid "Open"
+msgstr ""
+
+#: ../src/widgets/notifications_common.rs:223
+#: ../src/widgets/notifications_common.rs:367
+msgid "Show more"
+msgstr ""
+
+#: ../src/widgets/notifications_common.rs:365
+msgid "Show less"
+msgstr ""
+
+#: ../src/widgets/notifications_common.rs:404
+#, rust-format
+msgid "{}d ago"
+msgstr ""
+
+#: ../src/widgets/media_popover.rs:84
+msgid "Select player"
+msgstr ""
+
+#: ../src/widgets/media_popover.rs:104
+msgid "Pop out"
+msgstr ""
+
+#: ../src/widgets/media_popover.rs:185
+msgid "Auto"
+msgstr ""
+
+#: ../src/widgets/notifications.rs:128
+msgid "Notification daemon unavailable (another daemon is running)"
+msgstr ""
+
+#: ../src/widgets/notifications.rs:145
+#, rust-format
+msgid "{} new notification ({} total)"
+msgid_plural "{} new notifications ({} total)"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/notifications.rs:152
+#, rust-format
+msgid "{} notification"
+msgid_plural "{} notifications"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/widgets/calendar_popover.rs:106
+msgid "Go to today"
+msgstr ""
+
+#: ../src/widgets/calendar_popover.rs:458
+msgid "Loading events..."
+msgstr ""
+
+#: ../src/widgets/calendar_popover.rs:460
+msgid "No events"
+msgstr ""
+
+#: ../src/widgets/calendar_popover.rs:739
+msgid "All day"
+msgstr ""
+
+#: ../src/widgets/calendar_popover.rs:743
+msgid "Ongoing"
+msgstr ""
+
+#: ../src/widgets/calendar_popover.rs:745
+msgid "Until midnight"
+msgstr ""
+
+#: ../src/widgets/calendar_popover.rs:747
+#, rust-format
+msgid "Until {}"
+msgstr ""
+
+#: ../src/widgets/window_title.rs:676
+#, rust-format
+msgid "App: {}"
+msgstr ""
+
+#: ../src/widgets/window_title.rs:679
+#, rust-format
+msgid "ID: {}"
+msgstr ""
+
+#: ../src/widgets/window_title.rs:685
+#, rust-format
+msgid "Output: {}"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:106
+msgid "Mango layout: unknown"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:181
+#, rust-format
+msgid "Mango overview ({})"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:189
+#, rust-format
+msgid "Mango layout: {} ({})"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:193
+msgid "Mango layout: unavailable"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:247 ../src/widgets/mango_layout.rs:296
+msgid "Window Layout"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:306
+#, rust-format
+msgid "Layout for tag {} on {}"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:309
+#, rust-format
+msgid "Overview on {}"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:310
+#, rust-format
+msgid "Layout on {}"
+msgstr ""
+
+#: ../src/widgets/mango_layout.rs:311
+#, rust-format
+msgid "Layout for current view on {}"
+msgstr ""
+
+#: ../src/widgets/network_speed.rs:143
+msgid "Network: unknown"
+msgstr ""
+
+#: ../src/widgets/network_speed.rs:339
+msgid "Network: Service unavailable"
+msgstr ""
+
+#: ../src/widgets/network_speed.rs:368
+#, rust-format
+msgid ""
+"Download: {}\n"
+"Upload: {}"
+msgstr ""
+
+#: ../src/widgets/network_speed.rs:371
+#, rust-format
+msgid "Download: {}"
+msgstr ""
+
+#: ../src/widgets/network_speed.rs:372
+#, rust-format
+msgid "Upload: {}"
+msgstr ""
+
+#: ../src/widgets/keyboard_layout.rs:108
+msgid "Keyboard layout"
+msgstr ""
+
+#: ../src/widgets/keyboard_layout.rs:245
+msgid "Keyboard layout: unknown"
+msgstr ""
+
+#: ../src/widgets/keyboard_layout.rs:247
+#, rust-format
+msgid "Keyboard layout: {}"
+msgstr ""
+
+#: ../src/widgets/memory.rs:135
+msgid "Memory: unknown"
+msgstr ""
+
+#: ../src/widgets/memory.rs:236
+msgid "Memory: Service unavailable"
+msgstr ""
+
+#: ../src/widgets/memory.rs:258
+#, rust-format
+msgid ""
+"Memory: {:.1}%\n"
+"{} / {}"
+msgstr ""

@@ -10,6 +10,7 @@ use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
 use std::rc::{Rc, Weak};
 
+use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Box as GtkBox, Entry, Label, ListBox, ListBoxRow, Orientation, ScrolledWindow};
 use tracing::debug;
@@ -327,12 +328,12 @@ pub fn populate_vpn_list(state: &Rc<VpnCardState>, list_box: &ListBox, snapshot:
     clear_list_box(list_box);
 
     if !snapshot.is_ready {
-        add_placeholder_row(list_box, "Loading VPN state...");
+        add_placeholder_row(list_box, &gettext("Loading VPN state..."));
         return;
     }
 
     if snapshot.connections.is_empty() {
-        add_placeholder_row(list_box, "No VPN connections");
+        add_placeholder_row(list_box, &gettext("No VPN connections"));
         return;
     }
 
@@ -342,15 +343,15 @@ pub fn populate_vpn_list(state: &Rc<VpnCardState>, list_box: &ListBox, snapshot:
 
     for conn in &snapshot.connections {
         // Build extra parts (Autoconnect, VPN type)
-        let mut extra_parts = Vec::new();
+        let mut extra_parts: Vec<String> = Vec::new();
         if conn.autoconnect {
-            extra_parts.push("Autoconnect");
+            extra_parts.push(gettext("Autoconnect"));
         }
         // Show VPN type
         if conn.vpn_type == "wireguard" {
-            extra_parts.push("WireGuard");
+            extra_parts.push("WireGuard".to_string());
         } else if conn.vpn_type == "vpn" {
-            extra_parts.push("OpenVPN");
+            extra_parts.push("OpenVPN".to_string());
         }
 
         let icon_color = if conn.active {
@@ -371,11 +372,12 @@ pub fn populate_vpn_list(state: &Rc<VpnCardState>, list_box: &ListBox, snapshot:
 
         if conn.active {
             // Active: accent "Active" + muted extras
-            let subtitle_widget = build_accent_subtitle("Active", &extra_parts);
+            let extra_refs: Vec<&str> = extra_parts.iter().map(String::as_str).collect();
+            let subtitle_widget = build_accent_subtitle(&gettext("Active"), &extra_refs);
             row_builder = row_builder.subtitle_widget(subtitle_widget.upcast());
         } else {
             // Inactive: plain muted subtitle
-            let mut parts = vec!["Inactive"];
+            let mut parts = vec![gettext("Inactive")];
             parts.extend(extra_parts);
             let subtitle = parts.join(" \u{2022} ");
             row_builder = row_builder.subtitle(&subtitle);
@@ -425,8 +427,12 @@ fn create_vpn_action_widget(_state: &Rc<VpnCardState>, conn: &VpnConnection) -> 
     let is_active = conn.active;
 
     // Single action: "Disconnect" or "Connect" as accent-colored text
-    let action_text = if is_active { "Disconnect" } else { "Connect" };
-    let action_label = create_row_action_label(action_text);
+    let action_text = if is_active {
+        gettext("Disconnect")
+    } else {
+        gettext("Connect")
+    };
+    let action_label = create_row_action_label(&action_text);
 
     action_label.connect_clicked(move |_| {
         let vpn = VpnService::global();
@@ -532,17 +538,17 @@ pub fn on_vpn_changed(state: &Rc<VpnCardState>, snapshot: &VpnSnapshot) -> bool 
     // Update VPN subtitle
     if let Some(label) = state.base.subtitle.borrow().as_ref() {
         let subtitle = if !snapshot.available {
-            "Unavailable".to_string()
+            gettext("Unavailable")
         } else if !snapshot.is_ready {
-            "VPN".to_string()
+            gettext("VPN")
         } else if let Some(p) = primary {
             if p.active {
                 p.name.clone()
             } else {
-                "Disconnected".to_string()
+                gettext("Disconnected")
             }
         } else {
-            "No connections".to_string()
+            gettext("No connections")
         };
         label.set_label(&subtitle);
         set_subtitle_active(label, snapshot.available && snapshot.any_active);
@@ -588,9 +594,9 @@ fn build_vpn_auth_box(state: &Rc<VpnCardState>) {
     status_label.set_hexpand(true);
     btn_row.append(&status_label);
 
-    let btn_cancel = crate::widgets::base::vp_button_with_label("Cancel");
+    let btn_cancel = crate::widgets::base::vp_button_with_label(&gettext("Cancel"));
     btn_cancel.add_css_class(button::CARD);
-    let btn_ok = crate::widgets::base::vp_button_with_label("Connect");
+    let btn_ok = crate::widgets::base::vp_button_with_label(&gettext("Connect"));
     btn_ok.add_css_class(button::ACCENT);
 
     // Apply Pango font attrs to fix text clipping on layer-shell surfaces
@@ -635,9 +641,9 @@ fn show_vpn_auth_dialog(state: &Rc<VpnCardState>, request: &VpnAuthRequest) {
             // Use description from auth-dialog (external-ui-mode)
             desc.clone()
         } else if request.is_retry {
-            format!("Re-enter credentials for {}", request.name)
+            gettext("Re-enter credentials for {name}").replacen("{name}", &request.name, 1)
         } else {
-            format!("Enter credentials for {}", request.name)
+            gettext("Enter credentials for {name}").replacen("{name}", &request.name, 1)
         };
         label.set_label(&text);
     }
@@ -646,7 +652,7 @@ fn show_vpn_auth_dialog(state: &Rc<VpnCardState>, request: &VpnAuthRequest) {
     if let Some(status_label) = state.auth_status_label.borrow().as_ref() {
         if request.is_retry {
             status_label.add_css_class(color::ERROR);
-            status_label.set_label("Wrong password");
+            status_label.set_label(&gettext("Wrong password"));
         } else {
             status_label.remove_css_class(color::ERROR);
             status_label.set_label("");

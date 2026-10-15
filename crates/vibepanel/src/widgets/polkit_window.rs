@@ -7,6 +7,7 @@ use std::cell::{Cell, RefCell};
 use std::ffi::CStr;
 use std::rc::Rc;
 
+use gettextrs::{gettext};
 use gtk4::glib::translate::ToGlibPtr;
 use gtk4::prelude::*;
 use gtk4::{
@@ -60,7 +61,7 @@ impl PolkitWindow {
     fn new(app: &Application) -> Rc<Self> {
         let window = ApplicationWindow::builder()
             .application(app)
-            .title("Authentication required")
+            .title(&gettext("Authentication required"))
             .decorated(false)
             .resizable(false)
             .build();
@@ -91,7 +92,7 @@ impl PolkitWindow {
         let text = GtkBox::new(Orientation::Vertical, 4);
         text.set_hexpand(true);
         text.set_valign(Align::Center);
-        let title = Label::new(Some("Authentication required"));
+        let title = Label::new(Some(&gettext("Authentication required")));
         title.add_css_class(polkit::TITLE);
         title.add_css_class(color::PRIMARY);
         title.set_xalign(0.0);
@@ -142,9 +143,9 @@ impl PolkitWindow {
         let buttons = GtkBox::new(Orientation::Horizontal, 8);
         buttons.add_css_class(polkit::ACTIONS);
         buttons.set_halign(Align::End);
-        let cancel = vp_button_with_label("Cancel");
+        let cancel = vp_button_with_label(&gettext("Cancel"));
         cancel.add_css_class(button::CARD);
-        let authenticate = vp_button_with_label("Authenticate");
+        let authenticate = vp_button_with_label(&gettext("Authenticate"));
         authenticate.add_css_class(button::ACCENT);
         buttons.append(&cancel);
         buttons.append(&authenticate);
@@ -267,7 +268,7 @@ impl PolkitWindow {
 
         self.message.set_label(&view.message);
         self.user
-            .set_label(&format!("Authenticating as {}", view.user));
+            .set_label(&gettext("Authenticating as {}").replacen("{}", &view.user, 1));
         self.user.set_visible(view.other_user);
 
         let prompt = view.prompt.as_ref();

@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::{Rc, Weak};
 
+use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, Button, Grid, Label, Orientation};
 use tracing::warn;
@@ -102,7 +103,7 @@ pub struct MangoLayoutWidget {
 impl MangoLayoutWidget {
     pub fn new(config: MangoLayoutConfig, output_id: Option<String>) -> Self {
         let base = BaseWidget::new(&[widget::MANGO_LAYOUT]);
-        base.set_tooltip("Mango layout: unknown");
+        base.set_tooltip(&gettext("Mango layout: unknown"));
 
         let icon = material_icon("tile", widget::MANGO_LAYOUT_ICON);
         icon.root.set_visible(config.show_icon);
@@ -175,17 +176,21 @@ fn update_widget(
     if let Some(info) = info.filter(|info| is_overview(info)) {
         icon.set_layout("grid");
         label.set_label("OV");
-        TooltipManager::global()
-            .set_styled_tooltip(container, &format!("Mango overview ({})", info.output));
+        TooltipManager::global().set_styled_tooltip(
+            container,
+            &gettext("Mango overview ({})").replacen("{}", &info.output, 1),
+        );
         return;
     }
 
     let (symbol, tooltip) = match info {
         Some(info) => (
             info.symbol.as_str(),
-            format!("Mango layout: {} ({})", display_name(info), info.output),
+            gettext("Mango layout: {} ({})")
+                .replacen("{}", display_name(info), 1)
+                .replacen("{}", &info.output, 1),
         ),
-        None => ("?", "Mango layout: unavailable".to_string()),
+        None => ("?", gettext("Mango layout: unavailable")),
     };
     icon.set_layout(info.map(|info| info.layout_name.as_str()).unwrap_or("grid"));
     label.set_label(symbol);
@@ -239,7 +244,7 @@ fn build_popover(
 ) -> (GtkBox, MangoLayoutPopoverController) {
     let root = GtkBox::new(Orientation::Vertical, 12);
 
-    let title = Label::new(Some("Window Layout"));
+    let title = Label::new(Some(&gettext("Window Layout")));
     title.add_css_class(surface::POPOVER_TITLE);
     title.set_halign(Align::Start);
     root.append(&title);
@@ -260,7 +265,7 @@ fn build_popover(
         content.set_halign(Align::Fill);
         let icon = material_icon(layout.name, widget::MANGO_LAYOUT_TILE_ICON);
         content.append(&icon.root);
-        let label = Label::new(Some(layout.label));
+        let label = Label::new(Some(&gettext(layout.label)));
         label.add_css_class(widget::MANGO_LAYOUT_TILE_LABEL);
         label.set_ellipsize(gtk4::pango::EllipsizeMode::End);
         content.append(&label);
@@ -288,7 +293,7 @@ fn build_popover(
 
 fn popover_title(info: Option<&WindowLayoutInfo>) -> String {
     let Some(info) = info else {
-        return "Window Layout".to_string();
+        return gettext("Window Layout");
     };
 
     let tags = info
@@ -298,10 +303,12 @@ fn popover_title(info: Option<&WindowLayoutInfo>) -> String {
         .filter(|tag| *tag > 0)
         .collect::<Vec<_>>();
     match tags.as_slice() {
-        [tag] => format!("Layout for tag {tag} on {}", info.output),
-        [] if is_overview(info) => format!("Overview on {}", info.output),
-        [] => format!("Layout on {}", info.output),
-        _ => format!("Layout for current view on {}", info.output),
+        [tag] => gettext("Layout for tag {} on {}")
+            .replacen("{}", &tag.to_string(), 1)
+            .replacen("{}", &info.output, 1),
+        [] if is_overview(info) => gettext("Overview on {}").replacen("{}", &info.output, 1),
+        [] => gettext("Layout on {}").replacen("{}", &info.output, 1),
+        _ => gettext("Layout for current view on {}").replacen("{}", &info.output, 1),
     }
 }
 

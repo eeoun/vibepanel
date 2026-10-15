@@ -28,6 +28,7 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+use gettextrs::{gettext};
 use gtk4::gdk::Monitor;
 use gtk4::pango::EllipsizeMode;
 use gtk4::prelude::*;
@@ -195,7 +196,7 @@ impl SystemPopoverController {
         // Update cores expander label
         let core_count = snapshot.cpu_per_core.len();
         self.cores_expander_label
-            .set_label(&format!("{} cores", core_count));
+            .set_label(&gettext("{} cores").replacen("{}", &core_count.to_string(), 1));
 
         // Update per-core display
         self.update_core_bars(snapshot);
@@ -366,7 +367,7 @@ impl SystemPopoverController {
             let Some(usage) = mount.usage else {
                 // Still mounted, but its usage could not be read.
                 row.percent_label.set_label("");
-                row.usage_label.set_label("Unavailable");
+                row.usage_label.set_label(&gettext("Unavailable"));
                 continue;
             };
             row.percent_label
@@ -397,7 +398,7 @@ impl SystemPopoverController {
                 let row = GtkBox::new(Orientation::Horizontal, 8);
                 row.add_css_class(sp::CORE_ROW);
 
-                let label = Label::new(Some(&format!("Core {}", i)));
+                let label = Label::new(Some(&gettext("Core {}").replacen("{}", &i.to_string(), 1)));
                 label.add_css_class(color::MUTED);
                 label.set_width_chars(7);
                 label.set_xalign(0.0);
@@ -473,8 +474,10 @@ fn headline_mount(mounts: &[MountUsage]) -> Option<(&MountUsage, SpaceUsage)> {
 
 fn headline_tooltip(mount: Option<&MountUsage>) -> String {
     match mount {
-        Some(mount) => format!("{} usage. Click to show drives", mount.mount_point),
-        None => "Click to show drives".to_string(),
+        Some(mount) => {
+            gettext("{} usage. Click to show drives").replacen("{}", &mount.mount_point, 1)
+        }
+        None => gettext("Click to show drives").to_string(),
     }
 }
 
@@ -582,7 +585,7 @@ fn build_gpu_device_row() -> GpuDeviceRow {
     let container = GtkBox::new(Orientation::Vertical, 6);
     let header = GtkBox::new(Orientation::Horizontal, 8);
 
-    let title_label = Label::new(Some("GPU"));
+    let title_label = Label::new(Some(&gettext("GPU")));
     title_label.set_halign(Align::Start);
     title_label.set_xalign(0.0);
     title_label.set_hexpand(true);
@@ -613,9 +616,9 @@ fn build_gpu_device_row() -> GpuDeviceRow {
     );
     graph.widget().add_css_class(color::ACCENT);
 
-    let vram = GpuMetricBar::new("VRAM");
-    let power = GpuMetricBar::new("Power");
-    let clock = GpuMetricBar::new("Clock");
+    let vram = GpuMetricBar::new(&gettext("VRAM"));
+    let power = GpuMetricBar::new(&gettext("Power"));
+    let clock = GpuMetricBar::new(&gettext("Clock"));
     let metrics = GtkBox::new(Orientation::Horizontal, 12);
     metrics.set_homogeneous(true);
     for metric in [&vram, &power, &clock] {
@@ -683,7 +686,7 @@ fn update_gpu_device_row(
 
 fn update_gpu_headline(usage: &Label, temperature: &Label, snapshot: &GpuDeviceSnapshot) {
     if snapshot.power_state == GpuPowerState::Suspended {
-        usage.set_label("Idle");
+        usage.set_label(&gettext("Idle"));
         temperature.set_visible(false);
         return;
     }
@@ -737,7 +740,8 @@ pub fn build_system_popover_with_controller() -> (Widget, SystemPopoverControlle
 
     let cpu_section = GtkBox::new(Orientation::Vertical, 8);
 
-    let (cpu_title, cpu_values) = section_title_with_values("cpu-symbolic", "CPU", &icons);
+    let (cpu_title, cpu_values) =
+        section_title_with_values("cpu-symbolic", &gettext("CPU"), &icons);
     let cpu_temp_label = Label::new(None);
     cpu_temp_label.add_css_class(color::MUTED);
     cpu_values.append(&cpu_temp_label);
@@ -763,7 +767,7 @@ pub fn build_system_popover_with_controller() -> (Widget, SystemPopoverControlle
     let cores_expanded = Rc::new(Cell::new(false));
     let expander_row = GtkBox::new(Orientation::Horizontal, 0);
 
-    let cores_expander_label = Label::new(Some("-- cores"));
+    let cores_expander_label = Label::new(Some(&gettext("-- cores")));
     cores_expander_label.add_css_class(color::MUTED);
     cores_expander_label.set_halign(Align::Start);
     cores_expander_label.set_hexpand(true);
@@ -788,7 +792,8 @@ pub fn build_system_popover_with_controller() -> (Widget, SystemPopoverControlle
     memory_card.add_css_class(sp::SECTION_CARD);
 
     let memory_section = GtkBox::new(Orientation::Vertical, 8);
-    let (memory_title, memory_values) = section_title_with_values("ram-symbolic", "Memory", &icons);
+    let (memory_title, memory_values) =
+        section_title_with_values("ram-symbolic", &gettext("Memory"), &icons);
     let memory_usage_label = Label::new(Some("--"));
     memory_usage_label.add_css_class(color::ACCENT);
     memory_usage_label.set_width_chars(6);
@@ -832,7 +837,7 @@ pub fn build_system_popover_with_controller() -> (Widget, SystemPopoverControlle
 
     let gpu_section = GtkBox::new(Orientation::Vertical, 8);
     let (gpu_title, gpu_values) =
-        section_title_with_values("video-display-symbolic", "GPU", &icons);
+        section_title_with_values("video-display-symbolic", &gettext("GPU"), &icons);
     gpu_title.add_css_class(sp::GPU_TITLE);
     let gpu_temp_label = Label::new(None);
     gpu_temp_label.add_css_class(color::MUTED);
@@ -865,7 +870,8 @@ pub fn build_system_popover_with_controller() -> (Widget, SystemPopoverControlle
     let disk_section = GtkBox::new(Orientation::Vertical, 8);
     disk_section.set_vexpand(true);
     // The usage value and chevron toggle the drives list.
-    let (disk_title, disk_values) = section_title_with_values("disk-symbolic", "Disk", &icons);
+    let (disk_title, disk_values) =
+        section_title_with_values("disk-symbolic", &gettext("Disk"), &icons);
     let disk_toggle = GtkBox::new(Orientation::Horizontal, 4);
     let disk_usage_label = Label::new(Some("--"));
     disk_usage_label.add_css_class(color::ACCENT);
@@ -935,7 +941,7 @@ pub fn build_system_popover_with_controller() -> (Widget, SystemPopoverControlle
     network_section.set_vexpand(true);
     network_section.append(&section_title(
         "network-transmit-receive-symbolic",
-        "Network",
+        &gettext("Network"),
         &icons,
     ));
 

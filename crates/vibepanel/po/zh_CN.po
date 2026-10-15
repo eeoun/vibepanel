@@ -1,0 +1,1340 @@
+# Chinese translations for vibepanel package
+# vibepanel 软件包的简体中文翻译.
+# Copyright (C) 2026 THE vibepanel'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the vibepanel package.
+# Automatically generated, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: vibepanel\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-15 15:13+0800\n"
+"PO-Revision-Date: 2026-10-15 14:18+0800\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ../src/widgets/osd.rs:140 ../src/widgets/quick_settings/network_card.rs:223
+#: ../src/widgets/quick_settings/bluetooth_card.rs:796
+#: ../src/widgets/quick_settings/vpn_card.rs:541
+#: ../src/widgets/quick_settings/window.rs:776
+#: ../src/widgets/system_popover.rs:370
+msgid "Unavailable"
+msgstr "不可用"
+
+#: ../src/widgets/osd.rs:341
+msgid "Play audio to enable"
+msgstr "播放音频以启用"
+
+#: ../src/widgets/disk.rs:214
+msgid "loading"
+msgstr "加载中"
+
+#: ../src/widgets/disk.rs:215
+msgid "unavailable"
+msgstr "不可用"
+
+#: ../src/widgets/disk.rs:222
+#, rust-format
+msgid "Disk {}: {status}"
+msgstr "磁盘 {}：{status}"
+
+#: ../src/widgets/disk.rs:246
+#, rust-format
+msgid ""
+"Disk {}: {:.1}%\n"
+"{} / {}\n"
+"{} free"
+msgstr ""
+"磁盘 {}：{:.1}%\n"
+"{} / {}\n"
+"剩余 {}"
+
+#: ../src/widgets/battery.rs:107 ../src/widgets/battery.rs:306
+msgid "Battery: unknown"
+msgstr "电池：未知"
+
+#: ../src/widgets/battery.rs:255
+msgid "Battery: Service unavailable"
+msgstr "电池：服务不可用"
+
+#: ../src/widgets/battery.rs:309 ../src/widgets/battery.rs:323
+#, rust-format
+msgid "Battery: {}"
+msgstr "电池：{}"
+
+#: ../src/widgets/battery.rs:311 ../src/widgets/battery_popover.rs:46
+msgid "Charging"
+msgstr "充电中"
+
+#: ../src/widgets/battery.rs:313 ../src/widgets/battery_popover.rs:49
+msgid "Full"
+msgstr "已充满"
+
+#: ../src/widgets/battery.rs:315 ../src/widgets/battery_popover.rs:47
+msgid "Discharging"
+msgstr "放电中"
+
+#: ../src/widgets/battery.rs:317
+msgid ""
+"\n"
+"State: "
+msgstr ""
+"\n"
+"状态："
+
+#: ../src/widgets/battery_popover.rs:17 ../src/widgets/battery_popover.rs:30
+#: ../src/widgets/battery_popover.rs:52 ../src/widgets/battery_popover.rs:160
+#: ../src/widgets/updates_common.rs:120
+msgid "Unknown"
+msgstr "未知"
+
+#: ../src/widgets/battery_popover.rs:48 ../src/widgets/workspaces.rs:2074
+msgid "Empty"
+msgstr "空"
+
+#: ../src/widgets/battery_popover.rs:50
+msgid "Pending charge"
+msgstr "待充电"
+
+#: ../src/widgets/battery_popover.rs:51
+msgid "Pending discharge"
+msgstr "待放电"
+
+#: ../src/widgets/battery_popover.rs:88
+msgid "Power Profile"
+msgstr "电源模式"
+
+#: ../src/widgets/battery_popover.rs:172
+#, rust-format
+msgid "Time until full: {}"
+msgstr "充满还需：{}"
+
+#: ../src/widgets/battery_popover.rs:179
+msgid "Time until full: Unknown"
+msgstr "充满还需：未知"
+
+#: ../src/widgets/battery_popover.rs:184
+#, rust-format
+msgid "Time remaining: {}"
+msgstr "剩余时间：{}"
+
+#: ../src/widgets/battery_popover.rs:191
+msgid "Time remaining: Unknown"
+msgstr "剩余时间：未知"
+
+#: ../src/widgets/battery_popover.rs:194 ../src/widgets/battery_popover.rs:197
+msgid "Time: Unknown"
+msgstr "时间：未知"
+
+#: ../src/widgets/battery_popover.rs:202
+#, rust-format
+msgid "Power draw: {}"
+msgstr "功耗：{}"
+
+#: ../src/widgets/battery_popover.rs:245
+msgid "Battery Information"
+msgstr "电池信息"
+
+#: ../src/widgets/gpu.rs:137
+msgid "GPU: unknown"
+msgstr "GPU：未知"
+
+#: ../src/widgets/gpu.rs:251 ../src/widgets/system_popover.rs:689
+msgid "Idle"
+msgstr "空闲"
+
+#: ../src/widgets/gpu.rs:295
+msgid "GPU: No supported GPU detected"
+msgstr "GPU：未检测到受支持的 GPU"
+
+#: ../src/widgets/gpu.rs:310
+msgid "State: Idle (suspended)"
+msgstr "状态：空闲（已挂起）"
+
+#: ../src/widgets/gpu.rs:312
+#, rust-format
+msgid "Usage: {:.1}%"
+msgstr "使用率：{:.1}%"
+
+#: ../src/widgets/gpu.rs:314
+msgid "Usage: --"
+msgstr "使用率：--"
+
+#: ../src/widgets/gpu.rs:318
+#, rust-format
+msgid "Temp: {:.0}°C"
+msgstr "温度：{:.0}°C"
+
+#: ../src/widgets/gpu.rs:322
+#, rust-format
+msgid "VRAM: {value}"
+msgstr "显存：{value}"
+
+#: ../src/widgets/gpu.rs:326
+#, rust-format
+msgid "Clock: {value}"
+msgstr "频率：{value}"
+
+#: ../src/widgets/gpu.rs:330
+#, rust-format
+msgid "Power: {value}"
+msgstr "功耗：{value}"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:269
+msgid "Audio: Service unavailable"
+msgstr "音频：服务不可用"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:278
+msgid "Volume control unavailable"
+msgstr "音量控制不可用"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:288
+msgid "Muted"
+msgstr "已静音"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:290
+#, rust-format
+msgid "Volume: {}%"
+msgstr "音量：{}%"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:329
+msgid "Bluetooth: No adapter found"
+msgstr "蓝牙：未找到适配器"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:362
+#: ../src/widgets/quick_settings/bar_widget.rs:366
+msgid "Bluetooth On"
+msgstr "蓝牙已开启"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:368
+msgid "Bluetooth Off"
+msgstr "蓝牙已关闭"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:411
+msgid "Wi-Fi: Service unavailable"
+msgstr "Wi-Fi：服务不可用"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:439
+msgid "Ethernet connected"
+msgstr "以太网已连接"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:441
+#: ../src/widgets/quick_settings/network_card.rs:722
+#: ../src/widgets/quick_settings/network_card.rs:757
+#: ../src/widgets/quick_settings/network_card.rs:1187
+#: ../src/widgets/quick_settings/bluetooth_card.rs:268
+msgid "Connected"
+msgstr "已连接"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:445
+#: ../src/widgets/quick_settings/bar_widget.rs:534
+#, rust-format
+msgid ""
+"{}\n"
+"Signal: {}%"
+msgstr ""
+"{}\n"
+"信号：{}%"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:452
+#: ../src/widgets/quick_settings/network_card.rs:237
+#: ../src/widgets/quick_settings/network_card.rs:267
+#, rust-format
+msgid "Connecting to {}"
+msgstr "正在连接到 {}"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:454
+#: ../src/widgets/quick_settings/network_card.rs:269
+#: ../src/widgets/quick_settings/network_card.rs:749
+#: ../src/widgets/quick_settings/network_card.rs:1100
+msgid "Connecting..."
+msgstr "正在连接…"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:456
+msgid "Wi-Fi Off"
+msgstr "Wi-Fi 已关闭"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:458
+msgid "Wi-Fi: Scanning..."
+msgstr "Wi-Fi：正在扫描…"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:460
+#: ../src/widgets/quick_settings/network_card.rs:284
+#: ../src/widgets/quick_settings/network_card.rs:785
+#: ../src/widgets/quick_settings/vpn_card.rs:548
+#: ../src/widgets/quick_settings/window.rs:868
+msgid "Disconnected"
+msgstr "未连接"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:522
+#, rust-format
+msgid ""
+"{}\n"
+"Off"
+msgstr ""
+"{}\n"
+"已关闭"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:524
+#, rust-format
+msgid ""
+"{}\n"
+"Connecting..."
+msgstr ""
+"{}\n"
+"正在连接…"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:526
+#, rust-format
+msgid ""
+"{}\n"
+"Connection failed"
+msgstr ""
+"{}\n"
+"连接失败"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:529
+#, rust-format
+msgid ""
+"{}\n"
+"Signal: {}%\n"
+"{}"
+msgstr ""
+"{}\n"
+"信号：{}%\n"
+"{}"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:539
+#, rust-format
+msgid ""
+"{}\n"
+"Disconnected"
+msgstr ""
+"{}\n"
+"未连接"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:587
+msgid "VPN Connected"
+msgstr "VPN 已连接"
+
+#: ../src/widgets/quick_settings/bar_widget.rs:592
+msgid "VPN Disconnected"
+msgstr "VPN 未连接"
+
+#: ../src/widgets/quick_settings/idle_inhibitor_card.rs:61
+#: ../src/widgets/quick_settings/bluetooth_card.rs:815
+#: ../src/widgets/quick_settings/window.rs:791
+#: ../src/widgets/quick_settings/window.rs:940
+msgid "Enabled"
+msgstr "已启用"
+
+#: ../src/widgets/quick_settings/idle_inhibitor_card.rs:63
+#: ../src/widgets/quick_settings/bluetooth_card.rs:817
+#: ../src/widgets/quick_settings/window.rs:793
+#: ../src/widgets/quick_settings/window.rs:942
+msgid "Disabled"
+msgstr "已禁用"
+
+#: ../src/widgets/quick_settings/network_card.rs:234
+#: ../src/widgets/quick_settings/network_card.rs:646
+msgid "Ethernet"
+msgstr "以太网"
+
+#: ../src/widgets/quick_settings/network_card.rs:252
+#, rust-format
+msgid "{} • Connecting to {}"
+msgstr "{} • 正在连接到 {}"
+
+#: ../src/widgets/quick_settings/network_card.rs:257
+#, rust-format
+msgid "{} • {}"
+msgstr "{} • {}"
+
+#: ../src/widgets/quick_settings/network_card.rs:279
+#, rust-format
+msgid "{} • Connecting..."
+msgstr "{} • 正在连接…"
+
+#: ../src/widgets/quick_settings/network_card.rs:286
+#: ../src/widgets/quick_settings/network_card.rs:742
+msgid "Off"
+msgstr "已关闭"
+
+#: ../src/widgets/quick_settings/network_card.rs:496
+#: ../src/widgets/quick_settings/network_card.rs:1893
+#: ../src/widgets/quick_settings/window.rs:670
+msgid "Wi-Fi"
+msgstr "Wi-Fi"
+
+#: ../src/widgets/quick_settings/network_card.rs:577
+#: ../src/widgets/quick_settings/bluetooth_card.rs:481
+#: ../src/widgets/quick_settings/vpn_card.rs:597
+#: ../src/widgets/polkit_window.rs:146
+msgid "Cancel"
+msgstr "取消"
+
+#: ../src/widgets/quick_settings/network_card.rs:579
+#: ../src/widgets/quick_settings/network_card.rs:882
+#: ../src/widgets/quick_settings/network_card.rs:1004
+#: ../src/widgets/quick_settings/network_card.rs:1272
+#: ../src/widgets/quick_settings/network_card.rs:1338
+#: ../src/widgets/quick_settings/bluetooth_card.rs:387
+#: ../src/widgets/quick_settings/vpn_card.rs:433
+#: ../src/widgets/quick_settings/vpn_card.rs:599
+msgid "Connect"
+msgstr "连接"
+
+#: ../src/widgets/quick_settings/network_card.rs:661
+#: ../src/widgets/quick_settings/network_card.rs:946
+msgid "Wired Connection"
+msgstr "有线连接"
+
+#: ../src/widgets/quick_settings/network_card.rs:712
+#: ../src/widgets/quick_settings/network_card.rs:714
+#, rust-format
+msgid "{} Gbps"
+msgstr "{} Gbps"
+
+#: ../src/widgets/quick_settings/network_card.rs:717
+#, rust-format
+msgid "{} Mbps"
+msgstr "{} Mbps"
+
+#: ../src/widgets/quick_settings/network_card.rs:804
+msgid "Mobile"
+msgstr "移动网络"
+
+#: ../src/widgets/quick_settings/network_card.rs:880
+#: ../src/widgets/quick_settings/network_card.rs:1002
+#: ../src/widgets/quick_settings/network_card.rs:1324
+#: ../src/widgets/quick_settings/bluetooth_card.rs:375
+#: ../src/widgets/quick_settings/vpn_card.rs:431
+msgid "Disconnect"
+msgstr "断开连接"
+
+#: ../src/widgets/quick_settings/network_card.rs:1066
+msgid "Wi-Fi is disabled"
+msgstr "Wi-Fi 已禁用"
+
+#: ../src/widgets/quick_settings/network_card.rs:1073
+msgid "No network connections"
+msgstr "没有网络连接"
+
+#: ../src/widgets/quick_settings/network_card.rs:1081
+msgid "No networks found"
+msgstr "未找到网络"
+
+#: ../src/widgets/quick_settings/network_card.rs:1103
+msgid "Secured"
+msgstr "已加密"
+
+#: ../src/widgets/quick_settings/network_card.rs:1107
+#: ../src/widgets/quick_settings/bluetooth_card.rs:275
+msgid "Saved"
+msgstr "已保存"
+
+#: ../src/widgets/quick_settings/network_card.rs:1354
+msgid "Share"
+msgstr "分享"
+
+#: ../src/widgets/quick_settings/network_card.rs:1371
+#: ../src/widgets/quick_settings/bluetooth_card.rs:400
+msgid "Forget"
+msgstr "忘记"
+
+#: ../src/widgets/quick_settings/network_card.rs:1412
+#, rust-format
+msgid "Enter password for {}"
+msgstr "输入 {} 的密码"
+
+#: ../src/widgets/quick_settings/network_card.rs:1595
+msgid "Connecting"
+msgstr "正在连接"
+
+#: ../src/widgets/quick_settings/network_card.rs:1618
+#, rust-format
+msgid "Connecting{}"
+msgstr "正在连接{}"
+
+#: ../src/widgets/quick_settings/network_card.rs:1892
+#: ../src/widgets/quick_settings/window.rs:668
+#: ../src/widgets/system_popover.rs:944
+msgid "Network"
+msgstr "网络"
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:44
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:63
+msgid "Share Wi-Fi"
+msgstr "分享 Wi-Fi"
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:74
+msgid "Close"
+msgstr "关闭"
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:231
+msgid "Loading Wi-Fi credentials..."
+msgstr "正在加载 Wi-Fi 凭据…"
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:260
+#, rust-format
+msgid "QR code for Wi-Fi network {ssid}"
+msgstr "Wi-Fi 网络 {ssid} 的二维码"
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:283
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:296
+msgid "Show password"
+msgstr "显示密码"
+
+#: ../src/widgets/quick_settings/wifi_qr_window.rs:299
+msgid "Hide password"
+msgstr "隐藏密码"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:193
+msgid "Bluetooth unavailable"
+msgstr "蓝牙不可用"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:201
+msgid "Bluetooth is disabled"
+msgstr "蓝牙已禁用"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:207
+msgid "Scanning for devices..."
+msgstr "正在扫描设备…"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:212
+msgid "No Bluetooth devices"
+msgstr "没有蓝牙设备"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:233
+msgid "Unknown device"
+msgstr "未知设备"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:259
+msgid "Pairing..."
+msgstr "正在配对…"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:262
+#: ../src/widgets/quick_settings/bluetooth_card.rs:272
+msgid "Paired"
+msgstr "已配对"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:335
+#: ../src/widgets/quick_settings/bluetooth_card.rs:497
+msgid "Pair"
+msgstr "配对"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:445
+#, rust-format
+msgid "Enter PIN for {device}"
+msgstr "输入 {device} 的 PIN 码"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:448
+#, rust-format
+msgid "Enter passkey for {device}"
+msgstr "输入 {device} 的配对码"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:451
+#, rust-format
+msgid "Confirm the code matches on {device}"
+msgstr "确认 {device} 上显示的代码是否一致"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:454
+#: ../src/widgets/quick_settings/bluetooth_card.rs:457
+#, rust-format
+msgid "Enter the code on {device}"
+msgstr "在 {device} 上输入代码"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:495
+msgid "Confirm"
+msgstr "确认"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:798
+#: ../src/widgets/quick_settings/bluetooth_card.rs:806
+#: ../src/widgets/quick_settings/window.rs:778
+#: ../src/widgets/quick_settings/window.rs:786
+#: ../src/widgets/quick_settings/window.rs:801
+msgid "Bluetooth"
+msgstr "蓝牙"
+
+#: ../src/widgets/quick_settings/bluetooth_card.rs:808
+#, rust-format
+msgid "{count} connected"
+msgstr "已连接 {count}"
+
+#: ../src/widgets/quick_settings/audio_card.rs:227
+msgid "Output Devices"
+msgstr "输出设备"
+
+#: ../src/widgets/quick_settings/audio_card.rs:236
+msgid "Applications"
+msgstr "应用程序"
+
+#: ../src/widgets/quick_settings/audio_card.rs:262
+msgid "Audio sink suspended. Play audio to enable volume control."
+msgstr "音频输出已挂起。播放音频以启用音量控制。"
+
+#: ../src/widgets/quick_settings/audio_card.rs:280
+#: ../src/widgets/quick_settings/audio_card.rs:356
+msgid "Audio unavailable"
+msgstr "音频不可用"
+
+#: ../src/widgets/quick_settings/audio_card.rs:285
+msgid "No audio devices"
+msgstr "没有音频设备"
+
+#: ../src/widgets/quick_settings/audio_card.rs:298
+msgid "No audio devices available"
+msgstr "没有可用的音频设备"
+
+#: ../src/widgets/quick_settings/audio_card.rs:361
+msgid "No application audio"
+msgstr "没有应用程序音频"
+
+#: ../src/widgets/quick_settings/audio_card.rs:525
+msgid "Unmute"
+msgstr "取消静音"
+
+#: ../src/widgets/quick_settings/audio_card.rs:527
+msgid "Mute"
+msgstr "静音"
+
+#: ../src/widgets/quick_settings/updates_card.rs:80
+msgid "Updates"
+msgstr "更新"
+
+#: ../src/widgets/quick_settings/updates_card.rs:160
+msgid "Refresh"
+msgstr "刷新"
+
+#: ../src/widgets/quick_settings/updates_card.rs:231
+#: ../src/widgets/updates_common.rs:76
+#, rust-format
+msgid "Last check: {}"
+msgstr "上次检查：{}"
+
+#: ../src/widgets/quick_settings/updates_card.rs:262
+#: ../src/widgets/updates_common.rs:46
+#, rust-format
+msgid "Error: {}"
+msgstr "错误：{}"
+
+#: ../src/widgets/quick_settings/updates_card.rs:271
+#: ../src/widgets/updates_common.rs:50
+msgid "System is up to date"
+msgstr "系统已是最新"
+
+#: ../src/widgets/quick_settings/ui_helpers.rs:682
+msgid "Scan"
+msgstr "扫描"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:331
+msgid "Loading VPN state..."
+msgstr "正在加载 VPN 状态…"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:336
+msgid "No VPN connections"
+msgstr "没有 VPN 连接"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:348
+msgid "Autoconnect"
+msgstr "自动连接"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:376
+#: ../src/widgets/workspaces.rs:2060
+msgid "Active"
+msgstr "已激活"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:380
+msgid "Inactive"
+msgstr "未激活"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:543
+#: ../src/widgets/quick_settings/window.rs:863
+#: ../src/widgets/quick_settings/window.rs:879
+msgid "VPN"
+msgstr "VPN"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:551
+#: ../src/widgets/quick_settings/window.rs:871
+msgid "No connections"
+msgstr "没有连接"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:644
+#, rust-format
+msgid "Re-enter credentials for {name}"
+msgstr "重新输入 {name} 的凭据"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:646
+#, rust-format
+msgid "Enter credentials for {name}"
+msgstr "输入 {name} 的凭据"
+
+#: ../src/widgets/quick_settings/vpn_card.rs:655
+msgid "Wrong password"
+msgstr "密码错误"
+
+#: ../src/widgets/quick_settings/mic_card.rs:171
+msgid "Input Devices"
+msgstr "输入设备"
+
+#: ../src/widgets/quick_settings/mic_card.rs:193
+msgid "Microphone unavailable. Check your audio settings."
+msgstr "麦克风不可用。请检查音频设置。"
+
+#: ../src/widgets/quick_settings/mic_card.rs:211
+msgid "No input devices"
+msgstr "没有输入设备"
+
+#: ../src/widgets/quick_settings/mic_card.rs:223
+msgid "No input devices available"
+msgstr "没有可用的输入设备"
+
+#: ../src/widgets/quick_settings/window.rs:596
+msgid "Hold to confirm"
+msgstr "长按确认"
+
+#: ../src/widgets/quick_settings/window.rs:598
+#: ../src/widgets/quick_settings/window.rs:1304
+#: ../src/widgets/quick_settings/power_card.rs:627
+msgid "Hold to shut down"
+msgstr "长按关机"
+
+#: ../src/widgets/quick_settings/window.rs:788
+#, rust-format
+msgid "{} connected"
+msgstr "已连接 {}"
+
+#: ../src/widgets/quick_settings/window.rs:947
+msgid "Idle Inhibitor"
+msgstr "空闲抑制"
+
+#: ../src/widgets/quick_settings/power_card.rs:503
+#: ../src/widgets/quick_settings/power_card.rs:626
+#: ../src/widgets/system_popover.rs:620
+msgid "Power"
+msgstr "电源"
+
+#: ../src/widgets/quick_settings/power_card.rs:504
+msgid "Hold to open"
+msgstr "长按打开"
+
+#: ../src/widgets/updates_common.rs:44
+msgid "Update check failed"
+msgstr "更新检查失败"
+
+#: ../src/widgets/updates_common.rs:48
+msgid "Checking for updates..."
+msgstr "正在检查更新…"
+
+#: ../src/widgets/updates_common.rs:54
+#, rust-format
+msgid "{} update available"
+msgid_plural "{} updates available"
+msgstr[0] "{} 个更新可用"
+
+#: ../src/widgets/updates_common.rs:83
+#, rust-format
+msgid "Last successful check: {}"
+msgstr "上次成功检查：{}"
+
+#: ../src/widgets/updates_common.rs:98
+msgid "Check failed"
+msgstr "检查失败"
+
+#: ../src/widgets/updates_common.rs:102
+msgid "Checking..."
+msgstr "正在检查…"
+
+#: ../src/widgets/updates_common.rs:106
+msgid "Up to date"
+msgstr "已是最新"
+
+#: ../src/widgets/updates_common.rs:110
+#, rust-format
+msgid "{} update"
+msgid_plural "{} updates"
+msgstr[0] "{} 个更新"
+
+#: ../src/widgets/updates_common.rs:116
+msgid "Never"
+msgstr "从未"
+
+#: ../src/widgets/updates_common.rs:126
+#: ../src/widgets/notifications_common.rs:395
+msgid "Just now"
+msgstr "刚刚"
+
+#: ../src/widgets/updates_common.rs:129
+#, rust-format
+msgid "{} minute ago"
+msgid_plural "{} minutes ago"
+msgstr[0] "{} 分钟前"
+
+#: ../src/widgets/updates_common.rs:132
+#, rust-format
+msgid "{} hour ago"
+msgid_plural "{} hours ago"
+msgstr[0] "{} 小时前"
+
+#: ../src/widgets/updates_common.rs:135
+#, rust-format
+msgid "{} day ago"
+msgid_plural "{} days ago"
+msgstr[0] "{} 天前"
+
+#: ../src/widgets/media_components.rs:346 ../src/widgets/media.rs:495
+msgid "Previous"
+msgstr "上一首"
+
+#: ../src/widgets/media_components.rs:364 ../src/widgets/media.rs:511
+msgid "Play/Pause"
+msgstr "播放/暂停"
+
+#: ../src/widgets/media_components.rs:380 ../src/widgets/media.rs:531
+msgid "Next"
+msgstr "下一首"
+
+#: ../src/widgets/media_components.rs:575
+#: ../src/widgets/media_components.rs:614
+msgid "No track playing"
+msgstr "没有正在播放的曲目"
+
+#: ../src/widgets/media_components.rs:582
+#: ../src/widgets/media_components.rs:623
+msgid "Unknown artist"
+msgstr "未知艺术家"
+
+#: ../src/widgets/tray.rs:1038
+msgid "← Back"
+msgstr "← 返回"
+
+#: ../src/widgets/tray.rs:1049
+msgid "No menu entries"
+msgstr "没有菜单项"
+
+#: ../src/widgets/updates.rs:84
+msgid "Updates: checking..."
+msgstr "更新：正在检查…"
+
+#: ../src/widgets/system_popover.rs:199
+#, rust-format
+msgid "{} cores"
+msgstr "{} 个核心"
+
+#: ../src/widgets/system_popover.rs:401
+#, rust-format
+msgid "Core {}"
+msgstr "核心 {}"
+
+#: ../src/widgets/system_popover.rs:478
+#, rust-format
+msgid "{} usage. Click to show drives"
+msgstr "{} 使用率。点击查看驱动器"
+
+#: ../src/widgets/system_popover.rs:480
+msgid "Click to show drives"
+msgstr "点击查看驱动器"
+
+#: ../src/widgets/system_popover.rs:588 ../src/widgets/system_popover.rs:840
+msgid "GPU"
+msgstr "GPU"
+
+#: ../src/widgets/system_popover.rs:619
+msgid "VRAM"
+msgstr "显存"
+
+#: ../src/widgets/system_popover.rs:621
+msgid "Clock"
+msgstr "频率"
+
+#: ../src/widgets/system_popover.rs:744
+msgid "CPU"
+msgstr "CPU"
+
+#: ../src/widgets/system_popover.rs:770
+msgid "-- cores"
+msgstr "-- 个核心"
+
+#: ../src/widgets/system_popover.rs:796
+msgid "Memory"
+msgstr "内存"
+
+#: ../src/widgets/system_popover.rs:874
+msgid "Disk"
+msgstr "磁盘"
+
+#: ../src/widgets/weather.rs:81 ../src/widgets/weather.rs:287
+msgid "Weather: loading..."
+msgstr "天气：正在加载…"
+
+#: ../src/widgets/weather.rs:235
+msgid "Unknown location"
+msgstr "未知位置"
+
+#: ../src/widgets/weather.rs:244
+#, rust-format
+msgid "Weather: {} · {}"
+msgstr "天气：{} · {}"
+
+#: ../src/widgets/weather.rs:252
+#, rust-format
+msgid "Condition: {}"
+msgstr "天气状况：{}"
+
+#: ../src/widgets/weather.rs:254
+#, rust-format
+msgid "Feels like: {}"
+msgstr "体感温度：{}"
+
+#: ../src/widgets/weather.rs:261
+#, rust-format
+msgid "Humidity: {humidity}%"
+msgstr "湿度：{humidity}%"
+
+#: ../src/widgets/weather.rs:268
+#, rust-format
+msgid "Wind: {}"
+msgstr "风速：{}"
+
+#: ../src/widgets/weather.rs:276
+msgid "day"
+msgstr "白天"
+
+#: ../src/widgets/weather.rs:278
+msgid "night"
+msgstr "夜间"
+
+#: ../src/widgets/weather.rs:280
+#, rust-format
+msgid "Light: {}"
+msgstr "光照：{}"
+
+#: ../src/widgets/weather.rs:289
+msgid "Weather: unavailable"
+msgstr "天气：不可用"
+
+#: ../src/widgets/weather.rs:293
+#, rust-format
+msgid "Updated: {}"
+msgstr "更新于：{}"
+
+#: ../src/widgets/weather.rs:297
+msgid "Data may be stale"
+msgstr "数据可能已过期"
+
+#: ../src/widgets/weather.rs:300 ../src/widgets/weather_popover.rs:355
+#, rust-format
+msgid "Error: {error}"
+msgstr "错误：{error}"
+
+#: ../src/widgets/weather.rs:320
+#, rust-format
+msgid ", rain {value}%"
+msgstr "，降雨 {value}%"
+
+#: ../src/widgets/weather.rs:323
+#, rust-format
+msgid "Forecast {}: {}, {} / {}{}"
+msgstr "预报 {}：{}，{} / {}{}"
+
+#: ../src/widgets/weather.rs:333 ../src/widgets/weather.rs:338
+msgid "just now"
+msgstr "刚刚"
+
+#: ../src/widgets/weather.rs:335 ../src/widgets/notifications_common.rs:398
+#, rust-format
+msgid "{}m ago"
+msgstr "{} 分钟前"
+
+#: ../src/widgets/weather.rs:337 ../src/widgets/notifications_common.rs:401
+#, rust-format
+msgid "{}h ago"
+msgstr "{} 小时前"
+
+#: ../src/widgets/weather_popover.rs:119
+#, rust-format
+msgid "Feels like {}"
+msgstr "体感 {}"
+
+#: ../src/widgets/weather_popover.rs:200
+msgid "Humidity"
+msgstr "湿度"
+
+#: ../src/widgets/weather_popover.rs:201
+msgid "Wind"
+msgstr "风速"
+
+#: ../src/widgets/weather_popover.rs:204
+msgid "Precipitation"
+msgstr "降水"
+
+#: ../src/widgets/weather_popover.rs:209
+msgid "Sunrise"
+msgstr "日出"
+
+#: ../src/widgets/weather_popover.rs:210
+msgid "Sunset"
+msgstr "日落"
+
+#: ../src/widgets/weather_popover.rs:211
+msgid "UV Index"
+msgstr "紫外线指数"
+
+#: ../src/widgets/weather_popover.rs:383
+msgid "Loading weather…"
+msgstr "正在加载天气…"
+
+#: ../src/widgets/weather_popover.rs:385
+msgid "No weather data available"
+msgstr "暂无天气数据"
+
+#: ../src/widgets/weather_popover.rs:454
+msgid "Today"
+msgstr "今天"
+
+#: ../src/widgets/workspaces.rs:2048 ../src/widgets/workspaces.rs:2056
+#, rust-format
+msgid "Workspace {}"
+msgstr "工作区 {}"
+
+#: ../src/widgets/workspaces.rs:2051
+#, rust-format
+msgid "Workspace {}: {}"
+msgstr "工作区 {}：{}"
+
+#: ../src/widgets/workspaces.rs:2062
+msgid "Urgent"
+msgstr "紧急"
+
+#: ../src/widgets/workspaces.rs:2066
+#, rust-format
+msgid "{} window"
+msgid_plural "{} windows"
+msgstr[0] "{} 个窗口"
+
+#: ../src/widgets/workspaces.rs:2072
+msgid "Has windows"
+msgstr "有窗口"
+
+#: ../src/widgets/polkit_window.rs:64 ../src/widgets/polkit_window.rs:95
+msgid "Authentication required"
+msgstr "需要认证"
+
+#: ../src/widgets/polkit_window.rs:148
+msgid "Authenticate"
+msgstr "认证"
+
+#: ../src/widgets/polkit_window.rs:271
+#, rust-format
+msgid "Authenticating as {}"
+msgstr "正在以 {} 身份认证"
+
+#: ../src/widgets/media.rs:551 ../src/widgets/media.rs:1019
+#: ../src/widgets/media.rs:1277
+msgid "No media playing"
+msgstr "没有正在播放的媒体"
+
+#: ../src/widgets/media.rs:1283
+#, rust-format
+msgid "Player: {}"
+msgstr "播放器：{}"
+
+#: ../src/widgets/media.rs:1287 ../src/widgets/window_title.rs:682
+#, rust-format
+msgid "Title: {}"
+msgstr "标题：{}"
+
+#: ../src/widgets/media.rs:1290
+#, rust-format
+msgid "Artist: {}"
+msgstr "艺术家：{}"
+
+#: ../src/widgets/media.rs:1293
+#, rust-format
+msgid "Album: {}"
+msgstr "专辑：{}"
+
+#: ../src/widgets/media.rs:1297 ../src/widgets/media_popover.rs:200
+msgid "Playing"
+msgstr "正在播放"
+
+#: ../src/widgets/media.rs:1298 ../src/widgets/media_popover.rs:201
+msgid "Paused"
+msgstr "已暂停"
+
+#: ../src/widgets/media.rs:1299 ../src/widgets/media_popover.rs:202
+msgid "Stopped"
+msgstr "已停止"
+
+#: ../src/widgets/media.rs:1301
+#, rust-format
+msgid "Status: {}"
+msgstr "状态：{}"
+
+#: ../src/widgets/media.rs:1304
+msgid "Media"
+msgstr "媒体"
+
+#: ../src/widgets/cpu.rs:151
+msgid "CPU: unknown"
+msgstr "CPU：未知"
+
+#: ../src/widgets/cpu.rs:247
+msgid "CPU: Service unavailable"
+msgstr "CPU：服务不可用"
+
+#: ../src/widgets/cpu.rs:268
+#, rust-format
+msgid ""
+"CPU: {:.1}%\n"
+"Temp: {:.0}°C\n"
+"Cores: {}"
+msgstr ""
+"CPU：{:.1}%\n"
+"温度：{:.0}°C\n"
+"核心数：{}"
+
+#: ../src/widgets/cpu.rs:272
+#, rust-format
+msgid ""
+"CPU: {:.1}%\n"
+"Cores: {}"
+msgstr ""
+"CPU：{:.1}%\n"
+"核心数：{}"
+
+#: ../src/widgets/gpu_format.rs:24
+#, rust-format
+msgid "{} used"
+msgstr "已用 {}"
+
+#: ../src/widgets/notifications_popover.rs:107
+#: ../src/widgets/notifications.rs:345
+msgid "Notifications"
+msgstr "通知"
+
+#: ../src/widgets/notifications_popover.rs:141
+#: ../src/widgets/notifications_popover.rs:167
+msgid "Unmute notifications"
+msgstr "取消通知静音"
+
+#: ../src/widgets/notifications_popover.rs:143
+#: ../src/widgets/notifications_popover.rs:169
+msgid "Mute notifications"
+msgstr "通知静音"
+
+#: ../src/widgets/notifications_popover.rs:185
+msgid "Clear all notifications"
+msgstr "清除所有通知"
+
+#: ../src/widgets/notifications_popover.rs:222
+msgid ""
+"Another notification daemon is running.\n"
+"Disable it to use this notification center."
+msgstr ""
+"另一个通知守护进程正在运行。\n"
+"请将其禁用以使用此通知中心。"
+
+#: ../src/widgets/notifications_popover.rs:232
+#: ../src/widgets/notifications.rs:160
+msgid "No notifications"
+msgstr "没有通知"
+
+#: ../src/widgets/notifications_popover.rs:390
+msgid "Dismiss"
+msgstr "忽略"
+
+#: ../src/widgets/notifications_popover.rs:488
+msgid "Open"
+msgstr "打开"
+
+#: ../src/widgets/notifications_common.rs:223
+#: ../src/widgets/notifications_common.rs:367
+msgid "Show more"
+msgstr "显示更多"
+
+#: ../src/widgets/notifications_common.rs:365
+msgid "Show less"
+msgstr "收起"
+
+#: ../src/widgets/notifications_common.rs:404
+#, rust-format
+msgid "{}d ago"
+msgstr "{} 天前"
+
+#: ../src/widgets/media_popover.rs:84
+msgid "Select player"
+msgstr "选择播放器"
+
+#: ../src/widgets/media_popover.rs:104
+msgid "Pop out"
+msgstr "弹出窗口"
+
+#: ../src/widgets/media_popover.rs:185
+msgid "Auto"
+msgstr "自动"
+
+#: ../src/widgets/notifications.rs:128
+msgid "Notification daemon unavailable (another daemon is running)"
+msgstr "通知守护进程不可用（另一个守护进程正在运行）"
+
+#: ../src/widgets/notifications.rs:145
+#, rust-format
+msgid "{} new notification ({} total)"
+msgid_plural "{} new notifications ({} total)"
+msgstr[0] "{} 条新通知（共 {} 条）"
+
+#: ../src/widgets/notifications.rs:152
+#, rust-format
+msgid "{} notification"
+msgid_plural "{} notifications"
+msgstr[0] "{} 条通知"
+
+#: ../src/widgets/calendar_popover.rs:106
+msgid "Go to today"
+msgstr "回到今天"
+
+#: ../src/widgets/calendar_popover.rs:458
+msgid "Loading events..."
+msgstr "正在加载事件…"
+
+#: ../src/widgets/calendar_popover.rs:460
+msgid "No events"
+msgstr "暂无事件"
+
+#: ../src/widgets/calendar_popover.rs:739
+msgid "All day"
+msgstr "全天"
+
+#: ../src/widgets/calendar_popover.rs:743
+msgid "Ongoing"
+msgstr "进行中"
+
+#: ../src/widgets/calendar_popover.rs:745
+msgid "Until midnight"
+msgstr "直到午夜"
+
+#: ../src/widgets/calendar_popover.rs:747
+#, rust-format
+msgid "Until {}"
+msgstr "直到 {}"
+
+#: ../src/widgets/window_title.rs:676
+#, rust-format
+msgid "App: {}"
+msgstr "应用：{}"
+
+#: ../src/widgets/window_title.rs:679
+#, rust-format
+msgid "ID: {}"
+msgstr "ID：{}"
+
+#: ../src/widgets/window_title.rs:685
+#, rust-format
+msgid "Output: {}"
+msgstr "输出：{}"
+
+#: ../src/widgets/mango_layout.rs:106
+msgid "Mango layout: unknown"
+msgstr "Mango 布局：未知"
+
+#: ../src/widgets/mango_layout.rs:181
+#, rust-format
+msgid "Mango overview ({})"
+msgstr "Mango 总览（{}）"
+
+#: ../src/widgets/mango_layout.rs:189
+#, rust-format
+msgid "Mango layout: {} ({})"
+msgstr "Mango 布局：{}（{}）"
+
+#: ../src/widgets/mango_layout.rs:193
+msgid "Mango layout: unavailable"
+msgstr "Mango 布局：不可用"
+
+#: ../src/widgets/mango_layout.rs:247 ../src/widgets/mango_layout.rs:296
+msgid "Window Layout"
+msgstr "窗口布局"
+
+#: ../src/widgets/mango_layout.rs:306
+#, rust-format
+msgid "Layout for tag {} on {}"
+msgstr "标签 {} 在 {} 上的布局"
+
+#: ../src/widgets/mango_layout.rs:309
+#, rust-format
+msgid "Overview on {}"
+msgstr "{} 上的总览"
+
+#: ../src/widgets/mango_layout.rs:310
+#, rust-format
+msgid "Layout on {}"
+msgstr "{} 上的布局"
+
+#: ../src/widgets/mango_layout.rs:311
+#, rust-format
+msgid "Layout for current view on {}"
+msgstr "{} 上当前视图的布局"
+
+#: ../src/widgets/network_speed.rs:143
+msgid "Network: unknown"
+msgstr "网络：未知"
+
+#: ../src/widgets/network_speed.rs:339
+msgid "Network: Service unavailable"
+msgstr "网络：服务不可用"
+
+#: ../src/widgets/network_speed.rs:368
+#, rust-format
+msgid ""
+"Download: {}\n"
+"Upload: {}"
+msgstr ""
+"下载：{}\n"
+"上传：{}"
+
+#: ../src/widgets/network_speed.rs:371
+#, rust-format
+msgid "Download: {}"
+msgstr "下载：{}"
+
+#: ../src/widgets/network_speed.rs:372
+#, rust-format
+msgid "Upload: {}"
+msgstr "上传：{}"
+
+#: ../src/widgets/keyboard_layout.rs:108
+msgid "Keyboard layout"
+msgstr "键盘布局"
+
+#: ../src/widgets/keyboard_layout.rs:245
+msgid "Keyboard layout: unknown"
+msgstr "键盘布局：未知"
+
+#: ../src/widgets/keyboard_layout.rs:247
+#, rust-format
+msgid "Keyboard layout: {}"
+msgstr "键盘布局：{}"
+
+#: ../src/widgets/memory.rs:135
+msgid "Memory: unknown"
+msgstr "内存：未知"
+
+#: ../src/widgets/memory.rs:236
+msgid "Memory: Service unavailable"
+msgstr "内存：服务不可用"
+
+#: ../src/widgets/memory.rs:258
+#, rust-format
+msgid ""
+"Memory: {:.1}%\n"
+"{} / {}"
+msgstr ""
+"内存：{:.1}%\n"
+"{} / {}"
+

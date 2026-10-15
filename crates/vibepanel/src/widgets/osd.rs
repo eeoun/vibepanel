@@ -16,6 +16,7 @@ use crate::services::callbacks::CallbackId;
 use crate::styles::{color, osd};
 use crate::widgets::blur_host::BlurWindow;
 
+use gettextrs::{gettext};
 use gtk4::gdk;
 use gtk4::glib;
 use gtk4::prelude::*;
@@ -136,7 +137,7 @@ impl OsdWidget {
         unavailable_icon.add_css_class(color::MUTED);
         unavailable_content.append(&unavailable_icon);
 
-        let unavailable_label = Label::new(Some("Unavailable"));
+        let unavailable_label = Label::new(Some(&gettext("Unavailable")));
         unavailable_label.add_css_class(osd::UNAVAILABLE_LABEL);
         unavailable_label.add_css_class(color::MUTED);
         unavailable_content.append(&unavailable_label);
@@ -335,8 +336,10 @@ impl OsdOverlay {
 
     /// Show OSD indicating volume control is unavailable (device not ready).
     pub fn show_volume_unavailable(self: &Rc<Self>) {
-        self.osd_widget
-            .set_unavailable("audio-volume-muted-symbolic", "Play audio to enable");
+        self.osd_widget.set_unavailable(
+            "audio-volume-muted-symbolic",
+            &gettext("Play audio to enable"),
+        );
 
         self.window.set_visible(true);
         self.reset_hide_timer();

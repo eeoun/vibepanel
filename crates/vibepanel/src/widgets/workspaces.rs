@@ -105,6 +105,7 @@ use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
+use gettextrs::{gettext, ngettext};
 use gtk4::gdk::BUTTON_PRIMARY;
 use gtk4::glib;
 use gtk4::pango::EllipsizeMode;
@@ -2044,26 +2045,33 @@ fn build_tooltip(workspace: &Workspace) -> String {
     // show the name without an index prefix.
     let idx_str = workspace.idx.to_string();
     if workspace.idx < 0 {
-        parts.push(format!("Workspace {}", workspace.name));
+        parts.push(gettext("Workspace {}").replacen("{}", &workspace.name, 1));
     } else if workspace.name != idx_str {
-        parts.push(format!("Workspace {}: {}", workspace.idx, workspace.name));
+        parts.push(
+            gettext("Workspace {}: {}")
+                .replacen("{}", &workspace.idx.to_string(), 1)
+                .replacen("{}", &workspace.name, 1),
+        );
     } else {
-        parts.push(format!("Workspace {}", workspace.name));
+        parts.push(gettext("Workspace {}").replacen("{}", &workspace.name, 1));
     }
 
     if workspace.active {
-        parts.push("Active".to_string());
+        parts.push(gettext("Active"));
     } else if workspace.urgent {
-        parts.push("Urgent".to_string());
+        parts.push(gettext("Urgent"));
     }
 
     if let Some(count) = workspace.window_count {
-        let windows_str = if count == 1 { "window" } else { "windows" };
-        parts.push(format!("{} {}", count, windows_str));
+        parts.push(ngettext("{} window", "{} windows", count).replacen(
+            "{}",
+            &count.to_string(),
+            1,
+        ));
     } else if workspace.occupied {
-        parts.push("Has windows".to_string());
+        parts.push(gettext("Has windows"));
     } else {
-        parts.push("Empty".to_string());
+        parts.push(gettext("Empty"));
     }
 
     parts.join(" • ")
