@@ -11,6 +11,7 @@
 //! - `terminal`: Override terminal emulator detection
 //! - `update_command`: Shell command to run instead of the built-in upgrade
 
+use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{GestureClick, Label};
 use vibepanel_core::config::WidgetEntry;
@@ -73,7 +74,7 @@ impl UpdatesWidget {
     /// Create a new updates widget with the given configuration.
     pub fn new(config: UpdatesConfig) -> Self {
         let base = BaseWidget::new(&[widget::UPDATES]);
-        base.set_tooltip("Updates: checking...");
+        base.set_tooltip(&gettext("Updates: checking..."));
 
         // Mark as clickable since we have a custom click handler
         base.widget().add_css_class(state::CLICKABLE);

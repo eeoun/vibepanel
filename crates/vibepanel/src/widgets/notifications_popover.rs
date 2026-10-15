@@ -3,6 +3,7 @@
 //! This module handles the popover that appears when clicking the notification
 //! bell icon, showing a scrollable list of notifications with dismiss controls.
 
+use gettextrs::{gettext};
 use gtk4::gdk::Monitor;
 use gtk4::prelude::*;
 use gtk4::{
@@ -103,7 +104,7 @@ fn build_header(on_close: Option<ClosePopoverCallback>) -> GtkBox {
     let header = GtkBox::new(Orientation::Horizontal, 8);
     header.add_css_class(notif::HEADER);
 
-    let title = Label::new(Some("Notifications"));
+    let title = Label::new(Some(&gettext("Notifications")));
     title.add_css_class(surface::POPOVER_TITLE);
     title.set_hexpand(true);
     title.set_xalign(0.0);
@@ -136,10 +137,10 @@ fn build_header(on_close: Option<ClosePopoverCallback>) -> GtkBox {
     mute_btn.set_child(Some(&mute_icon_widget));
     tooltip_manager.set_styled_tooltip(
         &mute_btn,
-        if is_muted {
-            "Unmute notifications"
+        &if is_muted {
+            gettext("Unmute notifications")
         } else {
-            "Mute notifications"
+            gettext("Mute notifications")
         },
     );
 
@@ -162,10 +163,10 @@ fn build_header(on_close: Option<ClosePopoverCallback>) -> GtkBox {
         });
         tooltip_manager.set_styled_tooltip(
             btn,
-            if is_muted {
-                "Unmute notifications"
+            &if is_muted {
+                gettext("Unmute notifications")
             } else {
-                "Mute notifications"
+                gettext("Mute notifications")
             },
         );
     });
@@ -181,7 +182,7 @@ fn build_header(on_close: Option<ClosePopoverCallback>) -> GtkBox {
         clear_btn.set_focus_on_click(false);
         clear_btn.add_css_class(surface::POPOVER_ICON_BTN);
         clear_btn.set_valign(Align::Start);
-        tooltip_manager.set_styled_tooltip(&clear_btn, "Clear all notifications");
+        tooltip_manager.set_styled_tooltip(&clear_btn, &gettext("Clear all notifications"));
 
         let clear_icon =
             icons.create_icon("user-trash-symbolic", &[color::PRIMARY, notif::HEADER_ICON]);
@@ -217,7 +218,9 @@ fn populate_notification_list(
     if !service.backend_available() {
         add_empty_state(
             list,
-            "Another notification daemon is running.\nDisable it to use this notification center.",
+            &gettext(
+                "Another notification daemon is running.\nDisable it to use this notification center.",
+            ),
         );
         return;
     }
@@ -226,7 +229,7 @@ fn populate_notification_list(
     let mut notifications: Vec<Notification> = service.history_notifications();
 
     if notifications.is_empty() {
-        add_empty_state(list, "No notifications");
+        add_empty_state(list, &gettext("No notifications"));
         return;
     }
 
@@ -384,7 +387,7 @@ fn build_notification_row(
     dismiss_btn.add_css_class(notif::DISMISS_BTN);
     dismiss_btn.add_css_class(button::RESET);
     dismiss_btn.set_valign(Align::Start);
-    dismiss_btn.set_tooltip_text(Some("Dismiss"));
+    dismiss_btn.set_tooltip_text(Some(&gettext("Dismiss")));
 
     let dismiss_icon = Image::from_icon_name("window-close-symbolic");
     dismiss_icon.add_css_class(notif::DISMISS_ICON);
@@ -482,7 +485,7 @@ fn build_notification_row(
 
         // Primary "Open" action button, if available
         if let Some(primary_id) = primary_action {
-            let open_btn = crate::widgets::base::vp_button_with_label("Open");
+            let open_btn = crate::widgets::base::vp_button_with_label(&gettext("Open"));
             open_btn.add_css_class(notif::ACTION_BTN);
             open_btn.add_css_class(button::GHOST);
 

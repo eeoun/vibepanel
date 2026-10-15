@@ -1,5 +1,6 @@
 //! Media popover - detailed media player controls and track information.
 
+use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, Button, Label, Orientation, Popover, Widget};
 
@@ -80,7 +81,7 @@ where
     player_icon.widget().set_valign(Align::Center);
     player_btn.set_child(Some(&player_icon.widget()));
 
-    TooltipManager::global().set_styled_tooltip(&player_btn, "Select player");
+    TooltipManager::global().set_styled_tooltip(&player_btn, &gettext("Select player"));
     player_btn.connect_clicked(|btn| {
         TooltipManager::global().cancel_and_hide();
         show_player_menu(btn);
@@ -100,7 +101,7 @@ where
     popout_icon.widget().set_valign(Align::Center);
     popout_btn.set_child(Some(&popout_icon.widget()));
 
-    TooltipManager::global().set_styled_tooltip(&popout_btn, "Pop out");
+    TooltipManager::global().set_styled_tooltip(&popout_btn, &gettext("Pop out"));
     popout_btn.connect_clicked(move |_| on_popout());
     buttons_row.append(&popout_btn);
 
@@ -181,7 +182,7 @@ fn show_player_menu(parent: &Button) {
     content.set_margin_end(4);
 
     // Auto option - show current auto-selected player as subtitle
-    let auto_btn = create_player_menu_item("Auto", active_player_name, is_auto);
+    let auto_btn = create_player_menu_item(&gettext("Auto"), active_player_name, is_auto);
     auto_btn.connect_clicked({
         let popover = popover.clone();
         move |_| {
@@ -196,12 +197,12 @@ fn show_player_menu(parent: &Button) {
     for player in players {
         let is_selected = !is_auto && player.is_active;
         let status_text = match player.playback_status {
-            PlaybackStatus::Playing => Some("Playing"),
-            PlaybackStatus::Paused => Some("Paused"),
-            PlaybackStatus::Stopped => Some("Stopped"),
+            PlaybackStatus::Playing => Some(gettext("Playing")),
+            PlaybackStatus::Paused => Some(gettext("Paused")),
+            PlaybackStatus::Stopped => Some(gettext("Stopped")),
         };
 
-        let btn = create_player_menu_item(&player.player_name, status_text, is_selected);
+        let btn = create_player_menu_item(&player.player_name, status_text.as_deref(), is_selected);
         let bus_name = player.bus_name.clone();
         btn.connect_clicked({
             let popover = popover.clone();

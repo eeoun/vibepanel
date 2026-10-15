@@ -9,6 +9,7 @@
 //! - `TooltipManager` for styled tooltips
 //! - Shared popover with CPU widget for detailed system info
 
+use gettextrs::{gettext};
 use gtk4::Label;
 use gtk4::prelude::*;
 use vibepanel_core::config::WidgetEntry;
@@ -131,7 +132,7 @@ impl MemoryWidget {
 
     /// Shared construction for active and passive modes.
     fn build(config: MemoryConfig, base: BaseWidget) -> Self {
-        base.set_tooltip("Memory: unknown");
+        base.set_tooltip(&gettext("Memory: unknown"));
 
         let icon_handle = base.add_icon("ram-symbolic", &[widget::MEMORY_ICON]);
 
@@ -232,7 +233,7 @@ fn update_memory_widget(
         memory_label.set_visible(true);
 
         let tooltip_manager = TooltipManager::global();
-        tooltip_manager.set_styled_tooltip(container, "Memory: Service unavailable");
+        tooltip_manager.set_styled_tooltip(container, &gettext("Memory: Service unavailable"));
         return;
     }
 
@@ -254,12 +255,10 @@ fn update_memory_widget(
     memory_label.set_label(&text);
     memory_label.set_visible(true);
 
-    let tooltip = format!(
-        "Memory: {:.1}%\n{} / {}",
-        snapshot.memory_percent,
-        format_bytes_long(snapshot.memory_used),
-        format_bytes_long(snapshot.memory_total)
-    );
+    let tooltip = gettext("Memory: {:.1}%\n{} / {}")
+        .replacen("{:.1}", &format!("{:.1}", snapshot.memory_percent), 1)
+        .replacen("{}", &format_bytes_long(snapshot.memory_used), 1)
+        .replacen("{}", &format_bytes_long(snapshot.memory_total), 1);
     let tooltip_manager = TooltipManager::global();
     tooltip_manager.set_styled_tooltip(container, &tooltip);
 }

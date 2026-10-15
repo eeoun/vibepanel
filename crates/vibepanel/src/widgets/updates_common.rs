@@ -10,6 +10,7 @@ use std::process::{Command, Stdio};
 use std::thread;
 use std::time::SystemTime;
 
+use gettextrs::{gettext, ngettext};
 use gtk4::glib;
 use tracing::{debug, error, warn};
 
@@ -41,16 +42,22 @@ pub fn format_tooltip(snapshot: &UpdatesSnapshot) -> String {
 
     // Header
     if let Some(ref err) = snapshot.error {
-        lines.push("Update check failed".to_string());
+        lines.push(gettext("Update check failed"));
         lines.push(String::new());
-        lines.push(format!("Error: {}", err));
+        lines.push(gettext("Error: {}").replacen("{}", err, 1));
     } else if snapshot.checking {
-        lines.push("Checking for updates...".to_string());
+        lines.push(gettext("Checking for updates..."));
     } else if snapshot.update_count == 0 {
-        lines.push("System is up to date".to_string());
+        lines.push(gettext("System is up to date"));
     } else {
-        let s = if snapshot.update_count == 1 { "" } else { "s" };
-        lines.push(format!("{} update{} available", snapshot.update_count, s));
+        let count = snapshot.update_count as u32;
+        lines.push(
+            ngettext("{} update available", "{} updates available", count).replacen(
+                "{}",
+                &count.to_string(),
+                1,
+            ),
+        );
     }
 
     // Repo breakdown (only if updates are available)
@@ -67,15 +74,17 @@ pub fn format_tooltip(snapshot: &UpdatesSnapshot) -> String {
     // Last check time
     if snapshot.error.is_none() {
         lines.push(String::new());
-        lines.push(format!(
-            "Last check: {}",
-            format_last_check(snapshot.last_check)
+        lines.push(gettext("Last check: {}").replacen(
+            "{}",
+            &format_last_check(snapshot.last_check),
+            1,
         ));
     } else if snapshot.last_check.is_some() {
         lines.push(String::new());
-        lines.push(format!(
-            "Last successful check: {}",
-            format_last_check(snapshot.last_check)
+        lines.push(gettext("Last successful check: {}").replacen(
+            "{}",
+            &format_last_check(snapshot.last_check),
+            1,
         ));
     }
 
@@ -87,47 +96,44 @@ pub fn format_tooltip(snapshot: &UpdatesSnapshot) -> String {
 /// Example: "12 updates" or "1 update"
 pub fn format_repo_summary(snapshot: &UpdatesSnapshot) -> String {
     if snapshot.error.is_some() {
-        return "Check failed".to_string();
+        return gettext("Check failed");
     }
 
     if snapshot.checking {
-        return "Checking...".to_string();
+        return gettext("Checking...");
     }
 
     if snapshot.update_count == 0 {
-        return "Up to date".to_string();
+        return gettext("Up to date");
     }
 
-    let s = if snapshot.update_count == 1 { "" } else { "s" };
-    format!("{} update{}", snapshot.update_count, s)
+    let count = snapshot.update_count as u32;
+    ngettext("{} update", "{} updates", count).replacen("{}", &count.to_string(), 1)
 }
 
 /// Format a human-readable "last checked" string.
 pub fn format_last_check(time: Option<SystemTime>) -> String {
     let Some(time) = time else {
-        return "Never".to_string();
+        return gettext("Never");
     };
 
     let Ok(elapsed) = time.elapsed() else {
-        return "Unknown".to_string();
+        return gettext("Unknown");
     };
 
     let secs = elapsed.as_secs();
 
     if secs < 60 {
-        "Just now".to_string()
+        gettext("Just now")
     } else if secs < 3600 {
-        let mins = secs / 60;
-        let s = if mins == 1 { "" } else { "s" };
-        format!("{} minute{} ago", mins, s)
+        let mins = (secs / 60) as u32;
+        ngettext("{} minute ago", "{} minutes ago", mins).replacen("{}", &mins.to_string(), 1)
     } else if secs < 86400 {
-        let hours = secs / 3600;
-        let s = if hours == 1 { "" } else { "s" };
-        format!("{} hour{} ago", hours, s)
+        let hours = (secs / 3600) as u32;
+        ngettext("{} hour ago", "{} hours ago", hours).replacen("{}", &hours.to_string(), 1)
     } else {
-        let days = secs / 86400;
-        let s = if days == 1 { "" } else { "s" };
-        format!("{} day{} ago", days, s)
+        let days = (secs / 86400) as u32;
+        ngettext("{} day ago", "{} days ago", days).replacen("{}", &days.to_string(), 1)
     }
 }
 

@@ -10,6 +10,7 @@
 //! - `TooltipManager` for styled tooltips
 //! - Shared popover with CPU/Memory widgets for detailed system info
 
+use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Label, Orientation};
 use vibepanel_core::config::WidgetEntry;
@@ -139,7 +140,7 @@ impl NetworkSpeedWidget {
 
     /// Shared construction for active and passive modes.
     fn build(config: NetworkSpeedConfig, base: BaseWidget) -> Self {
-        base.set_tooltip("Network: unknown");
+        base.set_tooltip(&gettext("Network: unknown"));
 
         let icon_handle = base.add_icon(
             "network-transmit-receive-symbolic",
@@ -335,7 +336,7 @@ fn update_network_widget(
         }
 
         let tooltip_manager = TooltipManager::global();
-        tooltip_manager.set_styled_tooltip(container, "Network: Service unavailable");
+        tooltip_manager.set_styled_tooltip(container, &gettext("Network: Service unavailable"));
         return;
     }
 
@@ -364,9 +365,11 @@ fn update_network_widget(
     }
 
     let tooltip = match format {
-        NetworkSpeedFormat::Both => format!("Download: {}\nUpload: {}", dl_text, ul_text),
-        NetworkSpeedFormat::Download => format!("Download: {}", dl_text),
-        NetworkSpeedFormat::Upload => format!("Upload: {}", ul_text),
+        NetworkSpeedFormat::Both => gettext("Download: {}\nUpload: {}")
+            .replacen("{}", &dl_text, 1)
+            .replacen("{}", &ul_text, 1),
+        NetworkSpeedFormat::Download => gettext("Download: {}").replacen("{}", &dl_text, 1),
+        NetworkSpeedFormat::Upload => gettext("Upload: {}").replacen("{}", &ul_text, 1),
     };
     let tooltip_manager = TooltipManager::global();
     tooltip_manager.set_styled_tooltip(container, &tooltip);

@@ -9,6 +9,7 @@
 //! - `TooltipManager` for styled tooltips
 //! - Shared popover with CPU/Memory widgets for detailed system info
 
+use gettextrs::{gettext};
 use gtk4::Label;
 use gtk4::prelude::*;
 use vibepanel_core::config::WidgetEntry;
@@ -133,7 +134,7 @@ impl GpuWidget {
 
     /// Shared construction for active and passive modes.
     fn build(config: GpuConfig, base: BaseWidget) -> Self {
-        base.set_tooltip("GPU: unknown");
+        base.set_tooltip(&gettext("GPU: unknown"));
 
         let icon_handle = base.add_icon("video-display-symbolic", &[widget::GPU_ICON]);
 
@@ -244,7 +245,11 @@ fn format_gpu_device_label(
     is_vertical: bool,
 ) -> String {
     if snapshot.power_state == GpuPowerState::Suspended {
-        return if is_vertical { "—" } else { "Idle" }.to_string();
+        return if is_vertical {
+            "—".to_string()
+        } else {
+            gettext("Idle")
+        };
     }
 
     match format {
@@ -287,7 +292,7 @@ fn format_gpu_usage(usage: f32, is_vertical: bool) -> String {
 fn format_gpu_tooltip(snapshot: &GpuSnapshot) -> String {
     let devices = &snapshot.devices;
     if devices.is_empty() {
-        return "GPU: No supported GPU detected".to_string();
+        return gettext("GPU: No supported GPU detected");
     }
 
     devices
@@ -302,27 +307,27 @@ fn format_gpu_tooltip_block(snapshot: &GpuDeviceSnapshot, show_index: bool) -> S
     lines.push(gpu_format::device_title(snapshot, show_index));
 
     if snapshot.power_state == GpuPowerState::Suspended {
-        lines.push("State: Idle (suspended)".to_string());
+        lines.push(gettext("State: Idle (suspended)"));
     } else if let Some(usage) = snapshot.gpu_usage {
-        lines.push(format!("Usage: {:.1}%", usage));
+        lines.push(gettext("Usage: {:.1}%").replacen("{:.1}", &format!("{:.1}", usage), 1));
     } else {
-        lines.push("Usage: --".to_string());
+        lines.push(gettext("Usage: --"));
     }
 
     if let Some(temp) = snapshot.temperature {
-        lines.push(format!("Temp: {:.0}°C", temp));
+        lines.push(gettext("Temp: {:.0}°C").replacen("{:.0}", &format!("{:.0}", temp), 1));
     }
 
     if let Some(value) = gpu_format::vram(snapshot) {
-        lines.push(format!("VRAM: {value}"));
+        lines.push(gettext("VRAM: {value}").replacen("{value}", &value, 1));
     }
 
     if let Some(value) = gpu_format::clock(snapshot) {
-        lines.push(format!("Clock: {value}"));
+        lines.push(gettext("Clock: {value}").replacen("{value}", &value, 1));
     }
 
     if let Some(value) = gpu_format::power(snapshot) {
-        lines.push(format!("Power: {value}"));
+        lines.push(gettext("Power: {value}").replacen("{value}", &value, 1));
     }
 
     lines.join("\n")
