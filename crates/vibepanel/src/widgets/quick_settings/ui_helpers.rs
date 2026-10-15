@@ -5,6 +5,8 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+use gettextrs::{gettext};
+
 use crate::services::icons::{IconHandle, IconsService};
 use crate::styles::{button, color, icon, qs, row, state};
 use crate::widgets::base::add_ripple_to_row;
