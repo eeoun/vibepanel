@@ -18,7 +18,7 @@
 //! This approach matches what nm-applet does, but with inline UI instead of
 //! popup dialogs for plugins that support external-ui-mode.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::os::unix::process::CommandExt;
@@ -101,8 +101,6 @@ pub struct VpnAuthRequest {
     pub uuid: String,
     /// Human-readable name of the VPN connection.
     pub name: String,
-    /// The NM setting name that needs secrets (e.g., "vpn").
-    pub setting_name: String,
     /// Fields the user must fill in.
     pub fields: Vec<SecretField>,
     /// Whether this is a retry (previous secrets were wrong).
@@ -152,8 +150,17 @@ enum AuthDialogResult {
     Error(String),
 }
 
+/// How a pending request ends; see [`VpnSecretAgent::finish`].
+enum End {
+    Secrets(Vec<(String, String)>),
+    Cancel(String),
+    TimedOut,
+}
+
 /// Pending D-Bus invocation waiting for user response.
 struct PendingSecretRequest {
+    /// Identifies this request to callbacks that may outlive it.
+    id: u64,
     invocation: gio::DBusMethodInvocation,
     /// Connection path for matching cancel requests.
     connection_path: String,
@@ -163,6 +170,8 @@ struct PendingSecretRequest {
     timeout_source: Option<glib::SourceId>,
     /// Child auth-dialog PID (shared with background thread). Killed on cancel/timeout.
     child_pid: Option<Arc<Mutex<Option<u32>>>>,
+    /// A legacy auth-dialog (own GTK window) holds the keyboard until this ends.
+    legacy_dialog: bool,
     /// Pre-filled secret values from auth-dialog (external-ui-mode) that don't
     /// need user prompting (`is_secret && !should_ask`). These are merged into
     /// the response when the user submits, so NM receives all expected secrets.
@@ -179,6 +188,7 @@ pub struct VpnSecretAgent {
     agent_registration_id: RefCell<Option<gio::RegistrationId>>,
     /// Pending secret request waiting for user response.
     pending_request: RefCell<Option<PendingSecretRequest>>,
+    last_request_id: Cell<u64>,
 }
 
 impl VpnSecretAgent {
@@ -186,6 +196,7 @@ impl VpnSecretAgent {
         Self {
             agent_registration_id: RefCell::new(None),
             pending_request: RefCell::new(None),
+            last_request_id: Cell::new(0),
         }
     }
 
@@ -418,9 +429,6 @@ impl VpnSecretAgent {
                 svc, plugin.supports_external_ui_mode
             );
 
-            // Cancel any existing pending request
-            Self::cancel_pending_request();
-
             Self::spawn_auth_dialog(
                 &plugin,
                 &connection_dict,
@@ -501,7 +509,6 @@ impl VpnSecretAgent {
         let auth_request = VpnAuthRequest {
             uuid: uuid.to_string(),
             name: name.to_string(),
-            setting_name: setting_name.clone(),
             fields,
             is_retry,
             description: None,
@@ -515,38 +522,7 @@ impl VpnSecretAgent {
             auth_request.fields.len()
         );
 
-        // Cancel any existing pending request
-        Self::cancel_pending_request();
-
-        // Start timeout
-        let timeout_source =
-            glib::timeout_add_local_once(Duration::from_secs(AUTH_TIMEOUT_SECS), move || {
-                warn!(
-                    "VpnSecretAgent: auth request timed out after {}s",
-                    AUTH_TIMEOUT_SECS
-                );
-                let agent = Self::global();
-                if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-                    pending.timeout_source = None;
-                    kill_child_process(&pending.child_pid);
-                    pending
-                        .invocation
-                        .return_dbus_error(AGENT_ERROR_USER_CANCELED, "Authentication timed out");
-                }
-                // Notify VPN service to clear auth state
-                super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthCleared);
-            });
-
-        // Store pending request
-        let agent = Self::global();
-        *agent.pending_request.borrow_mut() = Some(PendingSecretRequest {
-            invocation,
-            connection_path,
-            setting_name,
-            timeout_source: Some(timeout_source),
-            child_pid: None,
-            prefilled_secrets: Vec::new(),
-        });
+        Self::start_request(invocation, connection_path, setting_name, None, false);
 
         // Notify VPN service about the auth request
         super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthRequest(auth_request));
@@ -621,42 +597,14 @@ impl VpnSecretAgent {
         // Clone data for the closure
         let uuid_clone = uuid.to_string();
         let name_clone = name.to_string();
-        let setting_name_clone = setting_name.clone();
 
-        // Store pending request with the invocation
-        let agent = Self::global();
-        *agent.pending_request.borrow_mut() = Some(PendingSecretRequest {
+        let id = Self::start_request(
             invocation,
             connection_path,
             setting_name,
-            timeout_source: None, // Set after spawn
-            child_pid: Some(child_pid.clone()),
-            prefilled_secrets: Vec::new(), // Populated when ExternalUi result arrives
-        });
-
-        // Start timeout
-        let timeout_source =
-            glib::timeout_add_local_once(Duration::from_secs(AUTH_TIMEOUT_SECS), move || {
-                warn!(
-                    "VpnSecretAgent: auth-dialog timed out after {}s",
-                    AUTH_TIMEOUT_SECS
-                );
-                let agent = Self::global();
-                if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-                    pending.timeout_source = None;
-                    kill_child_process(&pending.child_pid);
-                    pending
-                        .invocation
-                        .return_dbus_error(AGENT_ERROR_USER_CANCELED, "Authentication timed out");
-                }
-                super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthCleared);
-            });
-
-        // Store the timeout source
-        let agent = Self::global();
-        if let Some(ref mut pending) = *agent.pending_request.borrow_mut() {
-            pending.timeout_source = Some(timeout_source);
-        }
+            Some(child_pid),
+            !use_external_ui,
+        );
 
         // Spawn auth-dialog on a background thread
         debug!(
@@ -686,27 +634,20 @@ impl VpnSecretAgent {
 
             // Marshal result back to main thread
             glib::idle_add_once(move || {
-                Self::handle_auth_dialog_result(
-                    result,
-                    use_external_ui,
-                    &uuid_clone,
-                    &name_clone,
-                    &setting_name_clone,
-                    is_retry,
-                );
+                Self::handle_auth_dialog_result(id, result, &uuid_clone, &name_clone, is_retry);
             });
         });
     }
 
     /// Handle the result from the auth-dialog background thread.
     ///
-    /// Called on the main thread via `glib::idle_add_once`.
+    /// Called on the main thread via `glib::idle_add_once`. `id` is the
+    /// request the dialog was spawned for; it may have ended since.
     fn handle_auth_dialog_result(
+        id: u64,
         result: AuthDialogResult,
-        use_external_ui: bool,
         uuid: &str,
         name: &str,
-        setting_name: &str,
         is_retry: bool,
     ) {
         match result {
@@ -715,25 +656,7 @@ impl VpnSecretAgent {
                     "VpnSecretAgent: auth-dialog returned {} secret(s)",
                     secrets.len()
                 );
-
-                // Legacy auth-dialog finished — restore keyboard grab
-                if !use_external_ui {
-                    super::vpn::send_vpn_update(super::vpn::VpnUpdate::LegacyAuthDialogFinished);
-                }
-
-                // Return secrets directly on the pending invocation
-                let agent = Self::global();
-                if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-                    if let Some(source_id) = pending.timeout_source.take() {
-                        source_id.remove();
-                    }
-                    let response = Self::build_secrets_response(setting_name, &secrets);
-                    pending.invocation.return_value(Some(&response));
-                } else {
-                    debug!(
-                        "VpnSecretAgent: pending request already consumed (timeout/cancel), discarding secrets"
-                    );
-                }
+                Self::finish(id, End::Secrets(secrets));
             }
 
             AuthDialogResult::ExternalUi {
@@ -756,15 +679,7 @@ impl VpnSecretAgent {
                         .filter(|f| f.is_secret && !f.value.is_empty())
                         .map(|f| (f.key.clone(), f.value.clone()))
                         .collect();
-
-                    let agent = Self::global();
-                    if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-                        if let Some(source_id) = pending.timeout_source.take() {
-                            source_id.remove();
-                        }
-                        let response = Self::build_secrets_response(setting_name, &secrets);
-                        pending.invocation.return_value(Some(&response));
-                    }
+                    Self::finish(id, End::Secrets(secrets));
                     return;
                 }
 
@@ -795,7 +710,6 @@ impl VpnSecretAgent {
                 let auth_request = VpnAuthRequest {
                     uuid: uuid.to_string(),
                     name: name.to_string(),
-                    setting_name: setting_name.to_string(),
                     fields: secret_fields,
                     is_retry,
                     description: if description.is_empty() {
@@ -810,76 +724,27 @@ impl VpnSecretAgent {
                     auth_request.fields.len()
                 );
 
-                // Only show inline prompt if the pending request hasn't been
-                // consumed by a timeout or cancel while the auth-dialog ran.
+                // Only prompt if this request is still pending (not ended by a
+                // timeout, cancel or newer request while the auth-dialog ran).
                 let agent = Self::global();
-                let has_pending = agent.pending_request.borrow().is_some();
-
-                if has_pending {
-                    // Store pre-filled secrets on the pending request so they're
-                    // merged into the response when the user submits.
-                    if let Some(ref mut pending) = *agent.pending_request.borrow_mut() {
-                        pending.prefilled_secrets = prefilled;
-                    }
-
-                    // Notify VPN service to show inline prompt
+                let mut pending = agent.pending_request.borrow_mut();
+                if let Some(pending) = pending.as_mut().filter(|p| p.id == id) {
+                    pending.prefilled_secrets = prefilled;
                     super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthRequest(auth_request));
                 } else {
-                    debug!(
-                        "VpnSecretAgent: pending request already consumed, skipping auth prompt"
-                    );
+                    debug!("VpnSecretAgent: request {id} already finished, skipping auth prompt");
                 }
             }
 
             AuthDialogResult::Cancelled => {
                 debug!("VpnSecretAgent: auth-dialog cancelled by user");
-
-                // Legacy auth-dialog finished — restore keyboard grab
-                if !use_external_ui {
-                    super::vpn::send_vpn_update(super::vpn::VpnUpdate::LegacyAuthDialogFinished);
-                }
-
-                let agent = Self::global();
-                if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-                    if let Some(source_id) = pending.timeout_source.take() {
-                        source_id.remove();
-                    }
-                    pending
-                        .invocation
-                        .return_dbus_error(AGENT_ERROR_USER_CANCELED, "User canceled");
-                } else {
-                    debug!(
-                        "VpnSecretAgent: pending request already consumed (timeout/cancel), skipping cancel"
-                    );
-                }
-
-                super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthCleared);
+                Self::finish(id, End::Cancel("User canceled".to_string()));
             }
 
             AuthDialogResult::Error(msg) => {
                 error!("VpnSecretAgent: auth-dialog error: {}", msg);
-
-                // Legacy auth-dialog finished — restore keyboard grab
-                if !use_external_ui {
-                    super::vpn::send_vpn_update(super::vpn::VpnUpdate::LegacyAuthDialogFinished);
-                }
-
                 // Cancel the pending request and let NM retry
-                let agent = Self::global();
-                if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-                    if let Some(source_id) = pending.timeout_source.take() {
-                        source_id.remove();
-                    }
-                    pending.invocation.return_dbus_error(
-                        AGENT_ERROR_USER_CANCELED,
-                        &format!("Auth dialog failed: {msg}"),
-                    );
-                } else {
-                    debug!(
-                        "VpnSecretAgent: pending request already consumed (timeout/cancel), skipping error reply"
-                    );
-                }
-                super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthCleared);
+                Self::finish(id, End::Cancel(format!("Auth dialog failed: {msg}")));
             }
         }
     }
@@ -907,33 +772,14 @@ impl VpnSecretAgent {
             connection_path, setting_name
         );
 
-        let agent = Self::global();
-        let mut should_notify = false;
-
-        let should_cancel = agent
+        let matching = Self::global()
             .pending_request
             .borrow()
             .as_ref()
-            .map(|p| p.connection_path == connection_path && p.setting_name == setting_name)
-            .unwrap_or(false);
-
-        if should_cancel {
-            if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-                if let Some(source_id) = pending.timeout_source.take() {
-                    source_id.remove();
-                }
-                kill_child_process(&pending.child_pid);
-                pending
-                    .invocation
-                    .return_dbus_error(AGENT_ERROR_USER_CANCELED, "Canceled by NetworkManager");
-            }
-            should_notify = true;
-        }
-        drop(agent);
-
-        if should_notify {
-            // Notify VPN service to clear auth state
-            super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthCleared);
+            .filter(|p| p.connection_path == connection_path && p.setting_name == setting_name)
+            .map(|p| p.id);
+        if let Some(id) = matching {
+            Self::finish(id, End::Cancel("Canceled by NetworkManager".to_string()));
         }
 
         invocation.return_value(None);
@@ -943,78 +789,124 @@ impl VpnSecretAgent {
     ///
     /// Called by VpnService when the user submits credentials from the UI.
     /// `secrets` is a list of (key, value) pairs (e.g., [("password", "hunter2")]).
-    pub fn submit_secrets(setting_name: &str, secrets: &[(String, String)]) {
-        let agent = Self::global();
-
-        let mut pending = match agent.pending_request.borrow_mut().take() {
-            Some(p) => p,
-            None => {
-                debug!("VpnSecretAgent: submit_secrets called but no pending request");
-                return;
-            }
+    pub fn submit_secrets(secrets: &[(String, String)]) {
+        let Some(id) = Self::current_id() else {
+            debug!("VpnSecretAgent: submit_secrets called but no pending request");
+            return;
         };
-
-        // Cancel the timeout
-        if let Some(source_id) = pending.timeout_source.take() {
-            source_id.remove();
-        }
-
-        // Merge pre-filled secrets (from auth-dialog external-ui-mode) with
-        // user-provided secrets. User input takes precedence on key conflicts.
-        let merged: Vec<(String, String)> = {
-            let mut map: std::collections::HashMap<String, String> =
-                pending.prefilled_secrets.into_iter().collect();
-            for (k, v) in secrets {
-                map.insert(k.clone(), v.clone());
-            }
-            map.into_iter().collect()
-        };
-
         debug!(
-            "VpnSecretAgent: submitting {} secret(s) ({} pre-filled + {} user-provided)",
-            merged.len(),
-            merged.len().saturating_sub(secrets.len()),
+            "VpnSecretAgent: submitting {} user-provided secret(s)",
             secrets.len()
         );
-
-        // Build the response dict: { setting_name: { "secrets": { key: value, ... } } }
-        let response = Self::build_secrets_response(setting_name, &merged);
-
-        pending.invocation.return_value(Some(&response));
+        Self::finish(id, End::Secrets(secrets.to_vec()));
     }
 
     /// Cancel a pending auth request (user pressed Cancel in the UI).
     pub fn cancel_auth() {
-        let agent = Self::global();
+        if let Some(id) = Self::current_id() {
+            debug!("VpnSecretAgent: user cancelled auth");
+            Self::finish(id, End::Cancel("User canceled".to_string()));
+        }
+    }
 
-        let mut pending = match agent.pending_request.borrow_mut().take() {
-            Some(p) => p,
-            None => return,
+    fn current_id() -> Option<u64> {
+        Self::global()
+            .pending_request
+            .borrow()
+            .as_ref()
+            .map(|p| p.id)
+    }
+
+    /// Make `invocation` the pending request, ending any current one, and arm
+    /// its timeout. Returns the id to pass to [`Self::finish`].
+    fn start_request(
+        invocation: gio::DBusMethodInvocation,
+        connection_path: String,
+        setting_name: String,
+        child_pid: Option<Arc<Mutex<Option<u32>>>>,
+        legacy_dialog: bool,
+    ) -> u64 {
+        if let Some(id) = Self::current_id() {
+            Self::finish(
+                id,
+                End::Cancel("Superseded by new auth request".to_string()),
+            );
+        }
+        let agent = Self::global();
+        let id = agent.last_request_id.get() + 1;
+        agent.last_request_id.set(id);
+        let timeout_source =
+            glib::timeout_add_local_once(Duration::from_secs(AUTH_TIMEOUT_SECS), move || {
+                warn!(
+                    "VpnSecretAgent: auth request timed out after {}s",
+                    AUTH_TIMEOUT_SECS
+                );
+                Self::finish(id, End::TimedOut);
+            });
+        *agent.pending_request.borrow_mut() = Some(PendingSecretRequest {
+            id,
+            invocation,
+            connection_path,
+            setting_name,
+            timeout_source: Some(timeout_source),
+            child_pid,
+            legacy_dialog,
+            prefilled_secrets: Vec::new(), // Populated when ExternalUi result arrives
+        });
+        id
+    }
+
+    /// The single exit for a pending request: reply to NM, stop its timeout
+    /// and auth-dialog, and clear the auth UI. Does nothing unless `id` is
+    /// still pending, so a superseded or timed-out auth-dialog's late result
+    /// can't answer or clear a newer request.
+    fn finish(id: u64, end: End) {
+        let agent = Self::global();
+        let pending = {
+            let mut slot = agent.pending_request.borrow_mut();
+            if slot.as_ref().is_some_and(|p| p.id == id) {
+                slot.take()
+            } else {
+                None
+            }
+        };
+        let Some(mut pending) = pending else {
+            debug!("VpnSecretAgent: request {id} already finished");
+            return;
         };
 
-        if let Some(source_id) = pending.timeout_source.take() {
+        // A fired timeout has already removed its source.
+        if let Some(source_id) = pending.timeout_source.take()
+            && !matches!(end, End::TimedOut)
+        {
             source_id.remove();
         }
         kill_child_process(&pending.child_pid);
 
-        debug!("VpnSecretAgent: user cancelled auth");
-        pending
-            .invocation
-            .return_dbus_error(AGENT_ERROR_USER_CANCELED, "User canceled");
-    }
-
-    /// Cancel and clean up any existing pending request.
-    fn cancel_pending_request() {
-        let agent = Self::global();
-        if let Some(mut pending) = agent.pending_request.borrow_mut().take() {
-            if let Some(source_id) = pending.timeout_source.take() {
-                source_id.remove();
+        match end {
+            End::Secrets(secrets) => {
+                // Merge pre-filled secrets (from auth-dialog external-ui-mode)
+                // with the result. The result takes precedence on key conflicts.
+                let mut merged: HashMap<String, String> =
+                    pending.prefilled_secrets.into_iter().collect();
+                merged.extend(secrets);
+                let merged: Vec<(String, String)> = merged.into_iter().collect();
+                let response = Self::build_secrets_response(&pending.setting_name, &merged);
+                pending.invocation.return_value(Some(&response));
             }
-            kill_child_process(&pending.child_pid);
-            pending
+            End::Cancel(msg) => pending
                 .invocation
-                .return_dbus_error(AGENT_ERROR_USER_CANCELED, "Superseded by new auth request");
+                .return_dbus_error(AGENT_ERROR_USER_CANCELED, &msg),
+            End::TimedOut => pending
+                .invocation
+                .return_dbus_error(AGENT_ERROR_USER_CANCELED, "Authentication timed out"),
         }
+
+        if pending.legacy_dialog {
+            // Restore the keyboard grab released for the dialog's own window.
+            super::vpn::send_vpn_update(super::vpn::VpnUpdate::LegacyAuthDialogFinished);
+        }
+        super::vpn::send_vpn_update(super::vpn::VpnUpdate::AuthCleared);
     }
 
     // --- Variant parsing helpers ---

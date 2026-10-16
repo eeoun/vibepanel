@@ -15,7 +15,7 @@ use crate::popover_tracker::PopoverTracker;
 use crate::sectioned_bar::SectionedBar;
 use crate::services::config_manager::{ConfigManager, ThemeCallbackGuard};
 use crate::services::tooltip::TooltipManager;
-use crate::styles::{class, state, widget as style_widget};
+use crate::styles::{class, state};
 use crate::widgets::{
     self, BarState, CalendarWeatherPopoverBinding, ClockConfig, EdgeInteraction, MenuHandle,
     PopoverKind, QuickSettingsConfig, RippleHandle, WidgetConfig, WidgetFactory, popover_kind_for,
@@ -1465,9 +1465,6 @@ pub fn load_css(config: &Config) {
             palette.is_dark_mode
         );
 
-        // Register transient CSS (grow-in rules) at priority above user CSS
-        load_transient_css(&display);
-
         // Load user's custom style.css if it exists
         replace_user_css();
     } else {
@@ -1479,11 +1476,6 @@ pub fn load_css(config: &Config) {
 /// USER = 800, we use 900 to be above all internal styles (which use USER + 10 max).
 const USER_CSS_PRIORITY: u32 = gtk4::STYLE_PROVIDER_PRIORITY_USER + 100;
 
-/// Priority for transient/internal CSS that must override even user CSS.
-/// Used for `.workspace-grow-in` which forces `min-width: 0; transition: none;`
-/// so the container animation system stays in control during grow-in sequences.
-const TRANSIENT_CSS_PRIORITY: u32 = gtk4::STYLE_PROVIDER_PRIORITY_USER + 200;
-
 // Thread-local storage for the theme CSS provider so we can replace it on reload
 thread_local! {
     static THEME_CSS_PROVIDER: RefCell<Option<gtk4::CssProvider>> = const { RefCell::new(None) };
@@ -1492,13 +1484,6 @@ thread_local! {
 // Thread-local storage for the user CSS provider so we can replace it on reload
 thread_local! {
     static USER_CSS_PROVIDER: RefCell<Option<gtk4::CssProvider>> = const { RefCell::new(None) };
-}
-
-// Thread-local storage for the transient CSS provider (grow-in rules).
-// Stored to keep the provider alive for the process lifetime without
-// using std::mem::forget.
-thread_local! {
-    static TRANSIENT_CSS_PROVIDER: RefCell<Option<gtk4::CssProvider>> = const { RefCell::new(None) };
 }
 
 /// Search paths for user style.css.
@@ -1562,45 +1547,6 @@ pub(crate) fn find_user_css(config_dir: Option<&Path>) -> Option<PathBuf> {
     user_css_search_paths(config_dir)
         .into_iter()
         .find(|path| path.exists())
-}
-
-/// Load transient CSS rules at high priority (above user CSS).
-///
-/// These rules exist to keep the container animation system in control
-/// during workspace indicator grow-in/removal sequences. The `.workspace-grow-in`
-/// class forces `min-width: 0` and `transition: none` so that:
-/// - The indicator starts at zero width (container animates it in)
-/// - CSS transitions don't fight the container's tick-driven animation
-///
-/// Registered once per display; survives CSS reloads (intentionally).
-fn load_transient_css(display: &gtk4::gdk::Display) {
-    TRANSIENT_CSS_PROVIDER.with(|cell| {
-        if cell.borrow().is_some() {
-            return;
-        }
-
-        // `.workspace-grow-in` collapses the flow-axis size to 0 so the
-        // container animates the indicator in. In horizontal mode the flow
-        // axis is width; in vertical it is height. The .bar--vertical
-        // override restores min-width to the cross-axis size and zeros
-        // min-height instead.
-        let provider = gtk4::CssProvider::new();
-        provider.load_from_string(&format!(
-            ".{grow_in} {{ min-width: 0; }} \
-             .bar--vertical .{grow_in} {{ min-width: var(--icon-size); min-height: 0; }} \
-             .{notrans} {{ transition: none; }}",
-            grow_in = style_widget::WORKSPACE_GROW_IN,
-            notrans = style_widget::WORKSPACE_GROW_IN_NOTRANS,
-        ));
-
-        gtk4::style_context_add_provider_for_display(display, &provider, TRANSIENT_CSS_PRIORITY);
-
-        *cell.borrow_mut() = Some(provider);
-        debug!(
-            "Transient CSS registered (priority={})",
-            TRANSIENT_CSS_PRIORITY
-        );
-    });
 }
 
 /// Replace user's custom CSS provider (fail-safe).

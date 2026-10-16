@@ -8,98 +8,29 @@
 //! - `label_type`: `"none"` (minimal dots, default), `"icons"` (●/○/◆ glyphs),
 //!   `"name"` (workspace names; legacy alias: `"numbers"`), or `"index"`
 //!   (meaningful numeric index, falling back to name when none exists).
-//! - `separator`: string between indicators (non-minimal modes only).
-//! - `animate`: `true` (default) enables the `WorkspaceContainer` custom widget
-//!   for smooth transitions; `false` uses a plain GtkBox with no animation.
+//! - `separator`: string between indicators (non-animated mode only).
+//! - `animate`: `true` (default) lays indicators out in a [`WorkspaceContainer`]
+//!   that animates size changes; `false` uses a plain GtkBox with no animation.
 //! - `filter_by_output`: `true` (default) uses this bar output's per-output
 //!   workspace state; `false` shows global/all-output workspace state, including
 //!   each output's current workspace. In all-output mode, active styling still
 //!   follows the compositor's globally focused workspace.
 //!
-//! # Architecture
+//! # Animation
 //!
-//! ## Two layout modes
+//! CSS decides indicator *sizes* (no size transitions); [`WorkspaceContainer`]
+//! decides *timing*. Every indicator has an animated flow-axis extent that one
+//! tick callback moves (linearly) from its previous value towards the size CSS
+//! currently measures. Any target change restarts all extents on a shared clock, so a
+//! switch (one grows, one shrinks by the same amount) keeps the total constant
+//! and neighbouring bar widgets never jitter. Positions are rounded from the
+//! cumulative sum ([`slot_layout`]), so per-child rounding never leaks into
+//! the total.
 //!
-//! - **Minimal** (`label_type = "none"`, `animate = true`): Indicators are
-//!   children of a [`WorkspaceContainer`] custom widget that measures children's
-//!   live CSS widths each frame, preventing neighboring bar widgets from
-//!   jittering during transitions.
-//!
-//! - **Non-minimal** (or `animate = false`): Indicators go directly in the
-//!   content `GtkBox`. No animation, no `WorkspaceContainer`.
-//!
-//! ## WorkspaceContainer layout
-//!
-//! Children are split into two groups around the active indicator:
-//! - **Left group** `[0..=active]`: laid out left-to-right from x=0.
-//! - **Right group** `[active+1..n]`: laid out right-to-left from x=width.
-//!
-//! The gap between groups absorbs ±1px subpixel rounding drift from
-//! CSS-animated `min-width` values. `Overflow::Hidden` clips any transient
-//! overshoot. See [`compute_left_count`] for the split rules.
-//!
-//! ## Animation paths
-//!
-//! [`classify_change`] determines which of four paths to take:
-//!
-//! - **Switch** (`ChangeType::None`): Same IDs, different active. CSS classes
-//!   update in place. Active grows / inactive shrinks are self-balancing (same
-//!   transition duration), so container width stays constant. No container
-//!   animation needed.
-//!
-//! - **Removal** (`ChangeType::Removal`): Departed indicators are surgically
-//!   removed (preserving surviving widgets' GTK identity). The two-group split
-//!   is frozen ([`frozen_left_count`]) to prevent group-jumping. Container
-//!   animates from pre-removal to post-removal width.
-//!
-//! - **Addition** (`ChangeType::Addition`): Full recreate. New indicators get
-//!   `.workspace-grow-in` (min-width: 0) + `.workspace-grow-in-notrans`
-//!   (transition: none). The grow-in convergence tick callback removes these
-//!   classes over two frames, firing CSS transitions from 0→full width.
-//!   Container tracks `children_width` directly during this phase.
-//!
-//! - **Swap** (`ChangeType::Swap`): Same count, different IDs (e.g., ws4→ws5).
-//!   Same grow-in mechanism as Addition. Container stays pinned at pre-recreate
-//!   width; reconciliation adjusts after CSS transitions settle.
-//!
-//! ## Key mechanisms
-//!
-//! - **`suppress_reconcile`**: Set during Addition/Swap while grow-in CSS is
-//!   resolving. Prevents `size_allocate` reconciliation from snapping to
-//!   partially-resolved widths. Cleared by the convergence tick callback when
-//!   `children_width` stabilizes, or by the 2-second safety cap.
-//!
-//! - **Grow-in convergence** ([`start_grow_in_convergence`]): Three-phase tick
-//!   callback — phase 0 re-enables transitions, phase 1 removes `min-width: 0`
-//!   (firing the CSS transition), phase 2+ monitors `children_width` for
-//!   stability. Uses a generation counter for stale callback detection.
-//!
-//! - **Live target correction**: The animation tick callback re-measures
-//!   `children_width` each frame and updates the target to match. This handles
-//!   CSS hot-reloads and the fact that GTK4 batches style resolution (initial
-//!   measurements may be stale).
-//!
-//! - **Reconciliation guard** (`size_allocate`): When no animation is running
-//!   and `suppress_reconcile` is off, detects external CSS changes (e.g., user
-//!   stylesheet hot-reload) and kicks off a smooth animation to the new width.
-//!   The `queue_resize()` call is safe — GTK coalesces resize requests.
-//!
-//! - **Transient CSS**: `bar.rs` loads `.workspace-grow-in { min-width: 0 }`
-//!   and `.workspace-grow-in-notrans { transition: none }` at `USER+200`
-//!   priority, ensuring they override user CSS during animations.
-//!
-//! ## Concurrent tick callbacks
-//!
-//! The animation tick (from `set_target_width`) and the convergence tick (from
-//! `start_grow_in_convergence`) may run simultaneously. This is safe: they
-//! write to disjoint `Cell` fields, and GTK runs tick callbacks sequentially
-//! on the main thread.
-//!
-//! ## Testing
-//!
-//! Pure logic (`classify_change`, `compute_left_count`, `build_tooltip`) is
-//! unit-tested. Layout behavior requires a GTK display server and is verified
-//! manually.
+//! Added workspaces grow out of the middle of their gap. Removed ones are
+//! hidden immediately and their empty slot closes (quadratic ease-out), then they
+//! are unparented. CSS hot-reloads are picked up because targets are re-measured
+//! on every flow-axis `measure()`.
 
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
@@ -131,65 +62,46 @@ use crate::widgets::ripple::{trigger_ripple_from_gesture, wrap_with_ripple};
 use crate::widgets::warn_unknown_options;
 
 // ---------------------------------------------------------------------------
-// WorkspaceContainer — custom widget that follows children's live CSS widths
-// and splits them into two groups (left/right anchored) to absorb rounding
-// drift during CSS min-width transitions. Uses its own animation only for
-// workspace count changes (additions/removals).
+// WorkspaceContainer — lays indicators out along the flow axis using animated
+// extents (see module docs).
 // ---------------------------------------------------------------------------
 
 mod ws_container_imp {
     use super::*;
-    use std::cell::Cell;
+
+    pub(super) struct Entry {
+        pub(super) id: i32,
+        pub(super) widget: Widget,
+        /// Workspace is gone; extent animates to 0, then the widget is unparented.
+        pub(super) leaving: bool,
+        /// Last measured natural flow-axis size.
+        pub(super) nat: i32,
+        pub(super) from: f64,
+        pub(super) to: f64,
+        pub(super) cur: f64,
+        /// Growing in from 0: the visible box scales with the extent while
+        /// the CSS margin (gap) stays whole. Cleared when the animation ends.
+        pub(super) entering: bool,
+    }
 
     #[derive(Default)]
     pub struct WorkspaceContainer {
-        pub(super) children: RefCell<Vec<Widget>>,
-        pub(super) target_width: Cell<i32>,
+        pub(super) entries: RefCell<Vec<Entry>>,
+        /// Frame time of the current animation's first tick.
+        pub(super) anim_start: Cell<Option<i64>>,
+        pub(super) ticking: Cell<bool>,
+        /// Set by the first non-empty measure; until then indicators take
+        /// their measured size without animating (initial population).
+        pub(super) laid_out: Cell<bool>,
+        /// CSS gap (trailing margin every indicator carries), learned in
+        /// size_allocate. The last one's margin hangs past the end, so the
+        /// container's extent is `sum - gap` and the overflow is clipped.
         pub(super) gap: Cell<i32>,
-        /// Current animated width (f64 for smooth interpolation).
-        pub(super) current_width: Cell<f64>,
-        /// Width at the start of the current animation.
-        pub(super) anim_start_width: Cell<f64>,
-        /// Frame time (microseconds) at the start of the current animation.
-        pub(super) anim_start_time: Cell<Option<i64>>,
-        /// Whether an animation is currently running.
-        pub(super) animating: Cell<bool>,
-        /// When set, size_allocate uses this left-group size instead of
-        /// computing from the active CSS class. Used during removal
-        /// animations to keep surviving indicators in their original groups.
-        pub(super) frozen_left_count: Cell<Option<usize>>,
-        /// Temporarily suppresses reconciliation in size_allocate.
-        /// Set during additions/swaps while grow-in CSS classes are
-        /// resolving, cleared when CSS transitions converge.
-        pub(super) suppress_reconcile: Cell<bool>,
-        /// Previous frame's children width during convergence detection.
-        /// Negative sentinel (-1.0) means "not yet initialized".
-        pub(super) convergence_prev_width: Cell<f64>,
-        /// Number of consecutive frames where children width changed < 1px.
-        /// When this reaches CONVERGENCE_STABLE_FRAMES, transitions have
-        /// settled and suppress_reconcile can be cleared.
-        pub(super) convergence_stable_frames: Cell<u32>,
-        /// Frame time (µs) when the CSS transition started (phase 1).
-        /// Gates the transition-elapsed minimum and the 2s safety cap.
-        pub(super) convergence_start_time: Cell<Option<i64>>,
-        /// Generation counter for convergence tick callbacks. Incremented
-        /// each time a new grow-in starts; stale callbacks compare their
-        /// captured generation against this and self-terminate if it has
-        /// advanced.
-        pub(super) convergence_generation: Cell<u32>,
-        /// Timeout source for clearing `frozen_left_count` after a pure
-        /// switch. Cancelled and re-armed on rapid switches.
-        pub(super) switch_freeze_timeout: RefCell<Option<glib::SourceId>>,
         /// Per-instance CSS provider for long-indicator min-width rules.
-        /// Owned per-instance for lifecycle management (add/remove on
-        /// the display). Display-scoped CSS is safe because workspace
-        /// IDs are globally unique across all outputs.
+        /// Display-scoped CSS is safe because workspace IDs are globally
+        /// unique across all outputs.
         pub(super) long_mw_css_provider: RefCell<Option<CssProvider>>,
-        /// True when the bar is on a side edge (left/right). The container
-        /// uses width-named fields throughout (`target_width`, `current_width`,
-        /// etc.); in vertical orientation those values represent the flow
-        /// extent on the height axis. Naming is kept for diff churn — read
-        /// "width" as "flow extent" when this flag is set.
+        /// True when the bar is on a side edge; the flow axis is then vertical.
         pub(super) axis_vertical: Cell<bool>,
     }
 
@@ -211,10 +123,9 @@ mod ws_container_imp {
         }
 
         fn dispose(&self) {
-            self.obj().cancel_switch_freeze_timeout();
             self.obj().remove_long_mw_provider();
-            for child in self.children.borrow_mut().drain(..) {
-                child.unparent();
+            for e in self.entries.borrow_mut().drain(..) {
+                e.widget.unparent();
             }
         }
     }
@@ -224,117 +135,135 @@ mod ws_container_imp {
             gtk4::SizeRequestMode::ConstantSize
         }
 
-        fn measure(&self, orientation: gtk4::Orientation, for_size: i32) -> (i32, i32, i32, i32) {
-            let children = self.children.borrow();
-            if children.is_empty() {
-                return (0, 0, -1, -1);
-            }
-            let flow = if self.axis_vertical.get() {
-                gtk4::Orientation::Vertical
-            } else {
-                gtk4::Orientation::Horizontal
-            };
-            if orientation == flow {
-                // Always use the animated/reconciled flow extent so that
-                // per-frame CSS transition rounding noise does not cause the
-                // container to jitter during switches.
-                let w = self.current_width.get().round() as i32;
+        fn measure(&self, orientation: gtk4::Orientation, _for_size: i32) -> (i32, i32, i32, i32) {
+            let obj = self.obj();
+            if orientation == obj.flow_orientation() {
+                obj.sync_targets();
+                let sum: f64 = self.entries.borrow().iter().map(|e| e.cur).sum();
+                let w = (sum.round() as i32 - self.gap.get()).max(0);
                 (w, w, -1, -1)
             } else {
-                let mut max_min = 0i32;
-                let mut max_nat = 0i32;
-                for child in children.iter() {
-                    let (cmin, cnat, _, _) = child.measure(orientation, for_size);
-                    max_min = max_min.max(cmin);
-                    max_nat = max_nat.max(cnat);
-                }
-                (max_min, max_nat, -1, -1)
+                let entries = self.entries.borrow();
+                entries.iter().fold((0, 0, -1, -1), |(min, nat, _, _), e| {
+                    let (cmin, cnat, _, _) = e.widget.measure(orientation, -1);
+                    (min.max(cmin), nat.max(cnat), -1, -1)
+                })
             }
         }
 
         fn size_allocate(&self, width: i32, height: i32, baseline: i32) {
-            let children = self.children.borrow();
-            let n = children.len();
-            if n == 0 {
-                return;
-            }
-
             let vertical = self.axis_vertical.get();
-            let flow_orient = if vertical {
-                gtk4::Orientation::Vertical
+            let (flow_size, cross_size) = if vertical {
+                (height, width)
             } else {
+                (width, height)
+            };
+            let cross_orient = if vertical {
                 gtk4::Orientation::Horizontal
-            };
-            let flow_size = if vertical { height } else { width };
-            let cross_size = if vertical { width } else { height };
-            let allocate = |child: &Widget, c_flow: i32, pos: i32| {
-                let t = gtk4::gsk::Transform::new().translate(&if vertical {
-                    gtk4::graphene::Point::new(0.0, pos as f32)
-                } else {
-                    gtk4::graphene::Point::new(pos as f32, 0.0)
-                });
-                let (a, b) = if vertical {
-                    (cross_size, c_flow)
-                } else {
-                    (c_flow, cross_size)
-                };
-                child.allocate(a, b, baseline, Some(t));
-            };
-
-            if n == 1 {
-                let (_, c_flow, _, _) = children[0].measure(flow_orient, cross_size);
-                let pos = (flow_size - c_flow) / 2;
-                allocate(&children[0], c_flow, pos);
-                return;
-            }
-
-            let gap = self.gap.get();
-
-            // Two-group split around the active indicator:
-            //   Left group: [0..=active_idx]  — laid out from the leading edge
-            //   Right group: [active_idx+1..n] — laid out from the trailing edge
-            // The gap between groups absorbs ±1px rounding drift from
-            // CSS-animated min-width values. Overflow::Hidden clips any
-            // transient overshoot during multi-active transitions.
-            let active_css = crate::styles::widget::ACTIVE;
-            let active_idx = children.iter().position(|c| c.has_css_class(active_css));
-
-            let left_count = if let Some(frozen) = self.frozen_left_count.get() {
-                // During removal/switch animations, use the frozen split to
-                // keep indicators in their original groups.
-                frozen.min(n)
             } else {
-                compute_left_count(n, active_idx)
+                gtk4::Orientation::Vertical
+            };
+            let obj = self.obj();
+            // Children fill both axes (see set_children), so GTK never
+            // re-measures them for an allocation below their CSS min-size.
+            // Cross-axis centering is done here instead.
+            let allocate = |child: &Widget, size: i32, pos: i32| {
+                let cross = child.measure(cross_orient, -1).1.min(cross_size);
+                let cpos = (cross_size - cross) / 2;
+                let (x, y, w, h) = if vertical {
+                    (cpos, pos, cross, size)
+                } else {
+                    (pos, cpos, size, cross)
+                };
+                let point = gtk4::graphene::Point::new(x as f32, y as f32);
+                child.allocate(
+                    w,
+                    h,
+                    baseline,
+                    Some(gtk4::gsk::Transform::new().translate(&point)),
+                );
+            };
+            // Flow-axis end of a rect (container coordinates).
+            let flow_end = |r: gtk4::graphene::Rect| {
+                if vertical {
+                    r.y() + r.height()
+                } else {
+                    r.x() + r.width()
+                }
             };
 
-            // Leading group: laid out from pos=0
-            let mut p = 0i32;
-            for child in children[..left_count].iter() {
-                let (_, c_flow, _, _) = child.measure(flow_orient, cross_size);
-                allocate(child, c_flow, p);
-                p += c_flow + gap;
-            }
+            let entries = self.entries.borrow();
+            let slots = slot_layout(entries.iter().map(|e| e.cur));
+            let total = slots.last().map_or(0, |(pos, size)| pos + size);
+            let gap = self.gap.get();
+            let offset = (flow_size - (total - gap).max(0)) / 2;
+            let mut last_gap = None;
+            // Border-box end of the previous visible indicator, so a growing
+            // one is never pushed over it (that one may be growing too).
+            let mut prev_end = offset;
 
-            // Trailing group: laid out from pos=flow_size backwards
-            let mut rp = flow_size;
-            for child in children[left_count..].iter().rev() {
-                let (_, c_flow, _, _) = child.measure(flow_orient, cross_size);
-                rp -= c_flow;
-                allocate(child, c_flow, rp);
-                rp -= gap;
-            }
-
-            // Reconcile target extent when CSS changes externally (e.g. user
-            // style.css hot-reload). If no animation is running and the
-            // children's measured flow extents diverge from the stored target,
-            // animate to the new extent so the container tracks the new CSS
-            // dimensions without waiting for the next workspace event.
-            if !self.animating.get() && !self.suppress_reconcile.get() {
-                let obj = self.obj();
-                let measured = obj.compute_children_current_width();
-                if (measured - self.target_width.get()).abs() > 1 {
-                    obj.set_target_width(measured);
+            for (e, (pos, size)) in entries.iter().zip(slots) {
+                let mut pos = pos + offset;
+                let mut alloc = size;
+                if size < e.nat {
+                    // Below natural size. Allocating under CSS
+                    // margin+border+padding would give the overlay a negative
+                    // content box, so probe at natural size to learn that
+                    // floor and the trailing margin (gap).
+                    allocate(&e.widget, e.nat, pos);
+                    let content = if vertical {
+                        e.widget.height()
+                    } else {
+                        e.widget.width()
+                    };
+                    let floor = e.nat - content;
+                    alloc = if e.entering {
+                        // Scale the box with the slot and center it in the
+                        // gap it opens: it grows out of the middle;
+                        // neighbours resizing alongside shift it towards them.
+                        // The last one's gap hangs past the end, so keep the
+                        // box inside the container, but never over the
+                        // previous indicator (max wins if the bounds cross).
+                        // A box can't be narrower than its border+padding, so
+                        // padded pills may still clip for the first frames.
+                        let frac = size as f64 / e.nat as f64;
+                        let lead = ((gap as f64 * (1.0 - frac)) / 2.0).round() as i32;
+                        let a = floor + (frac * (e.nat - floor) as f64).round() as i32;
+                        pos = (pos - lead).min(offset + total - a).max(prev_end);
+                        a
+                    } else {
+                        size.max(floor)
+                    };
                 }
+                allocate(&e.widget, alloc, pos);
+                if !e.leaving && alloc > 0 {
+                    // The last live indicator's trailing margin is what hangs
+                    // past the end: allocation end minus border-box end.
+                    if let Some(r) = e.widget.compute_bounds(&*obj) {
+                        let end = flow_end(r).round() as i32;
+                        last_gap = Some(pos + alloc - end);
+                        prev_end = end;
+                    }
+                }
+            }
+            drop(entries);
+            if let Some(g) = last_gap
+                && self.gap.replace(g) != g
+            {
+                // Sizes include the gap, so animating them would squish every
+                // pill by the gap delta while the new margin applies at once.
+                // Snap to the new sizes instead (spacing edits are instant).
+                for e in self.entries.borrow_mut().iter_mut().filter(|e| !e.leaving) {
+                    let n = e.nat as f64;
+                    (e.from, e.to, e.cur) = (n, n, n);
+                }
+                // queue_resize() is ignored inside our own size_allocate.
+                let weak = obj.downgrade();
+                glib::idle_add_local_once(move || {
+                    if let Some(w) = weak.upgrade() {
+                        w.queue_resize();
+                    }
+                });
             }
         }
     }
@@ -351,132 +280,199 @@ impl WorkspaceContainer {
         glib::Object::builder().build()
     }
 
-    fn set_target_width(&self, width: i32) {
-        let imp = self.imp();
-        imp.target_width.set(width);
+    fn flow_orientation(&self) -> gtk4::Orientation {
+        if self.imp().axis_vertical.get() {
+            gtk4::Orientation::Vertical
+        } else {
+            gtk4::Orientation::Horizontal
+        }
+    }
 
-        let current = imp.current_width.get();
-        if (current - width as f64).abs() < 1.0 {
-            // Already at target — snap to exact value.
-            imp.current_width.set(width as f64);
-            self.queue_resize();
+    fn set_axis_vertical(&self, vertical: bool) {
+        self.imp().axis_vertical.set(vertical);
+    }
+
+    fn anim_duration_us(&self) -> f64 {
+        if self.imp().axis_vertical.get() {
+            SWITCH_DURATION_VERTICAL_US
+        } else {
+            SWITCH_DURATION_US
+        }
+    }
+
+    /// Replace the displayed indicators. Indicators keep their identity (and
+    /// animated extent) by workspace ID; new IDs grow in, missing IDs vanish
+    /// and their slot closes in place.
+    fn set_children(&self, children: Vec<(i32, Widget)>) {
+        let imp = self.imp();
+        let mut entries = imp.entries.borrow_mut();
+        // Snap (no animation) until the first layout, so snapshots arriving
+        // before it don't grow in at startup.
+        let snap = !imp.laid_out.get();
+        let old_ids: Vec<i32> = entries.iter().map(|e| e.id).collect();
+        let new_ids: Vec<i32> = children.iter().map(|(id, _)| *id).collect();
+        let mut pool: HashMap<i32, ws_container_imp::Entry> =
+            entries.drain(..).map(|e| (e.id, e)).collect();
+        let mut fresh: HashMap<i32, Widget> = children.into_iter().collect();
+
+        for id in merge_ids(&old_ids, &new_ids) {
+            let widget = fresh.remove(&id);
+            if let Some(w) = &widget {
+                // Fill both axes: GTK clamps a centered widget to its natural
+                // size (a shrinking indicator would snap) and re-measures it
+                // against the allocation (warns below CSS min-size).
+                // size_allocate centers on the cross axis itself.
+                w.set_halign(Align::Fill);
+                w.set_valign(Align::Fill);
+            }
+            let entry = match (pool.remove(&id), widget) {
+                (Some(mut e), Some(w)) => {
+                    if e.widget != w {
+                        // Re-added while its gap closes: continue from its extent.
+                        e.widget.unparent();
+                        e.widget = w;
+                    }
+                    e.widget.set_visible(true);
+                    if e.leaving {
+                        e.leaving = false;
+                        e.entering = true;
+                    }
+                    e
+                }
+                // Removed before the first layout: nothing to animate, and
+                // no tick would ever clean it up.
+                (Some(e), None) if snap => {
+                    e.widget.unparent();
+                    continue;
+                }
+                (Some(mut e), None) => {
+                    // Vanish immediately; the empty slot then closes. Hidden
+                    // widgets also get no clicks/tooltips in the gap.
+                    e.leaving = true;
+                    e.entering = false;
+                    e.widget.set_visible(false);
+                    e
+                }
+                (None, Some(w)) => ws_container_imp::Entry {
+                    id,
+                    widget: w,
+                    leaving: false,
+                    nat: 0,
+                    from: 0.0,
+                    to: 0.0,
+                    cur: 0.0,
+                    entering: !snap,
+                },
+                // Duplicate ID from a backend: already placed, skip it.
+                (None, None) => continue,
+            };
+            entries.push(entry);
+        }
+
+        // Keep GTK sibling order in sync (parents new widgets too).
+        let mut next: Option<Widget> = None;
+        for e in entries.iter().rev() {
+            e.widget.insert_before(self, next.as_ref());
+            next = Some(e.widget.clone());
+        }
+
+        drop(entries);
+        // Tick runs before layout re-measures targets; restart now so the
+        // in-flight animation can't finish (and drop) entries changed here.
+        if !snap {
+            self.restart_animation();
+        }
+        self.queue_resize();
+    }
+
+    /// Re-measure every indicator's natural size; if any target moved,
+    /// restart the animation from the current extents.
+    fn sync_targets(&self) {
+        let imp = self.imp();
+        let flow = self.flow_orientation();
+        let mut entries = imp.entries.borrow_mut();
+        // An empty measure at startup must not count as the first layout.
+        if entries.is_empty() {
             return;
         }
+        let snap = !imp.laid_out.replace(true);
+        let mut retarget = false;
+        for e in entries.iter_mut() {
+            e.nat = e.widget.measure(flow, -1).1;
+            // A retarget below the current extent (e.g. switched away
+            // mid-grow) means it has fully grown in; otherwise a later grow
+            // would reuse the grow-in geometry. A zero-size one never has.
+            if e.entering && e.nat > 0 && e.cur >= e.nat as f64 {
+                e.entering = false;
+            }
+            let to = if e.leaving { 0.0 } else { e.nat as f64 };
+            if snap {
+                (e.from, e.to, e.cur) = (to, to, to);
+            } else if e.to != to {
+                e.to = to;
+                retarget = true;
+            }
+        }
+        drop(entries);
+        if retarget {
+            self.restart_animation();
+        }
+    }
 
-        // Start (or restart) animation from current interpolated position.
-        // NOTE: This animation tick callback may coexist with the swap
-        // convergence tick callback — that's safe because they modify
-        // disjoint Cell fields (animation uses current_width/anim_start_*,
-        // convergence uses convergence_*/suppress_reconcile), and the
-        // !animating guard in size_allocate prevents conflicts.
-        imp.anim_start_width.set(current);
-        // anim_start_time will be set on the first tick (we don't have a
-        // frame clock reference here outside of a tick callback).
-        imp.anim_start_time.set(None);
-
-        if !imp.animating.get() {
-            imp.animating.set(true);
-            let widget = self.clone();
-            // TickCallbackId is intentionally not stored — GTK4 automatically
-            // removes tick callbacks when the widget is unrealized/disposed.
-            self.add_tick_callback(move |_w, frame_clock| {
-                let imp = widget.imp();
-                let now = frame_clock.frame_time(); // microseconds
-
-                let start_time = match imp.anim_start_time.get() {
-                    Some(t) => t,
-                    None => {
-                        imp.anim_start_time.set(Some(now));
-                        now
-                    }
-                };
-
-                let elapsed = now - start_time;
-
-                // Live target correction: as CSS resolves across frames,
-                // update the target to match children's actual measured
-                // widths. This handles the case where the initial target
-                // was stale (GTK4 batches style resolution after CSS class
-                // changes) and also supports custom CSS overrides.
-                //
-                // Skip while suppress_reconcile is set: the tracking
-                // branch below handles that case by following
-                // children_width directly.
-                let flow = if imp.axis_vertical.get() {
-                    gtk4::Orientation::Vertical
-                } else {
-                    gtk4::Orientation::Horizontal
-                };
-                let children_width =
-                    sum_children_widths(&imp.children.borrow(), imp.gap.get(), flow);
-                if !imp.suppress_reconcile.get()
-                    && (children_width - imp.target_width.get()).abs() > 1
-                {
-                    imp.target_width.set(children_width);
-                }
-                let target = imp.target_width.get() as f64;
-
-                // While suppress_reconcile is active, track children_width
-                // directly to avoid overshoot from the arithmetic target.
-                // Safe during rapid events: children_width reflects the
-                // current (recreated) children, so a new Addition/Swap
-                // while this tick is running just sees the latest layout.
-                if imp.suppress_reconcile.get() {
-                    imp.current_width.set(children_width as f64);
-                    widget.queue_resize();
-                    return glib::ControlFlow::Continue;
-                }
-
-                if elapsed >= INDICATOR_ANIM_DURATION_US {
-                    imp.current_width.set(children_width as f64);
-                    imp.target_width.set(children_width);
-                    imp.animating.set(false);
-                    imp.frozen_left_count.set(None);
-                    widget.queue_resize();
-                    return glib::ControlFlow::Break;
-                }
-
-                // Ease-out quadratic.
-                let t = elapsed as f64 / INDICATOR_ANIM_DURATION_US as f64;
-                let eased = 1.0 - (1.0 - t).powi(2);
-                let start = imp.anim_start_width.get();
-                let interpolated = start + (target - start) * eased;
-
-                // Floor-clamp: never narrower than children's actual widths.
-                // During removal + active-change, the ease-out curve can
-                // outpace the CSS transition on the newly-active indicator,
-                // which would squeeze neighbours. Using the larger of the
-                // two values keeps the layout correct at every frame.
-                imp.current_width
-                    .set(interpolated.max(children_width as f64));
-                widget.queue_resize();
-                glib::ControlFlow::Continue
+    /// One shared clock for all extents: restarting everyone together keeps
+    /// equal-and-opposite changes (switches, swaps) summing to a constant.
+    fn restart_animation(&self) {
+        let imp = self.imp();
+        for e in imp.entries.borrow_mut().iter_mut() {
+            e.from = e.cur;
+        }
+        imp.anim_start.set(None);
+        if imp.ticking.replace(true) {
+            return;
+        }
+        // TickCallbackId is not stored: GTK keeps tick callbacks across
+        // unrealize and drops them on dispose; `ticking` relies on that.
+        self.add_tick_callback(|wsc, clock| {
+            let imp = wsc.imp();
+            let now = clock.frame_time();
+            // First tick already shows one frame of progress, so a restart
+            // from a retarget doesn't sit still for a frame.
+            let start = imp.anim_start.get().unwrap_or_else(|| {
+                let interval = clock.refresh_info(now).0;
+                now - if interval > 0 { interval } else { 16_667 }
             });
-        }
-    }
-
-    fn set_gap(&self, gap: i32) {
-        self.imp().gap.set(gap);
-    }
-
-    fn add_child(&self, child: &Widget) {
-        child.set_parent(self);
-        self.imp().children.borrow_mut().push(child.clone());
-    }
-
-    fn clear_children(&self) {
-        self.imp().frozen_left_count.set(None);
-        self.cancel_switch_freeze_timeout();
-        self.remove_long_mw_provider();
-        for child in self.imp().children.borrow_mut().drain(..) {
-            child.unparent();
-        }
-    }
-
-    fn cancel_switch_freeze_timeout(&self) {
-        if let Some(id) = self.imp().switch_freeze_timeout.borrow_mut().take() {
-            id.remove();
-        }
+            imp.anim_start.set(Some(start));
+            // Switches/additions move linearly. While a slot closes, everything
+            // eases out together over REMOVAL_DURATION_US so growing
+            // neighbours can't lag the closing gap (no overshoot). One curve
+            // for all entries keeps paired changes summing to a constant.
+            let mut entries = imp.entries.borrow_mut();
+            let removing = entries.iter().any(|e| e.leaving);
+            let duration = if removing {
+                REMOVAL_DURATION_US
+            } else {
+                wsc.anim_duration_us()
+            };
+            let t = ((now - start) as f64 / duration).min(1.0);
+            let k = if removing { ease_out_quad(t) } else { t };
+            for e in entries.iter_mut() {
+                e.cur = e.from + (e.to - e.from) * k;
+            }
+            drop(entries);
+            wsc.queue_resize();
+            if t < 1.0 {
+                return glib::ControlFlow::Continue;
+            }
+            imp.entries.borrow_mut().retain_mut(|e| {
+                e.entering = false;
+                if e.leaving {
+                    e.widget.unparent();
+                }
+                !e.leaving
+            });
+            imp.ticking.set(false);
+            glib::ControlFlow::Break
+        });
     }
 
     fn remove_long_mw_provider(&self) {
@@ -484,27 +480,6 @@ impl WorkspaceContainer {
             && let Some(display) = gtk4::gdk::Display::default()
         {
             gtk4::style_context_remove_provider_for_display(&display, &provider);
-        }
-    }
-
-    /// Remove a specific child widget by reference. Order-preserving.
-    fn remove_child(&self, child: &Widget) {
-        let mut children = self.imp().children.borrow_mut();
-        if let Some(pos) = children.iter().position(|c| c == child) {
-            children.remove(pos);
-            child.unparent();
-        }
-    }
-
-    /// Adjust frozen_left_count by subtracting removals (saturating to 0).
-    fn adjust_frozen_left_count(&self, removed_from_left: usize) {
-        if removed_from_left == 0 {
-            return;
-        }
-        if let Some(frozen) = self.imp().frozen_left_count.get() {
-            self.imp()
-                .frozen_left_count
-                .set(Some(frozen.saturating_sub(removed_from_left)));
         }
     }
 
@@ -558,209 +533,50 @@ impl WorkspaceContainer {
         gtk4::style_context_add_provider_for_display(&display, &provider, LONG_MW_CSS_PRIORITY);
         *self.imp().long_mw_css_provider.borrow_mut() = Some(provider);
     }
-
-    /// Compute the current total flow extent of children from live CSS
-    /// measurements. In horizontal mode this is total width; in vertical it
-    /// is total height.
-    fn compute_children_current_width(&self) -> i32 {
-        let children = self.imp().children.borrow();
-        sum_children_widths(&children, self.imp().gap.get(), self.flow_orientation())
-    }
-
-    fn flow_orientation(&self) -> gtk4::Orientation {
-        if self.imp().axis_vertical.get() {
-            gtk4::Orientation::Vertical
-        } else {
-            gtk4::Orientation::Horizontal
-        }
-    }
-
-    fn set_axis_vertical(&self, vertical: bool) {
-        self.imp().axis_vertical.set(vertical);
-    }
-
-    /// Seed `current_width` to a known value without triggering animation.
-    ///
-    /// Used before `set_target_width()` in the removal path where the
-    /// animation must start from the pre-removal width rather than the
-    /// current interpolated position.
-    fn seed_current_width(&self, width: f64) {
-        self.imp().current_width.set(width);
-    }
-
-    /// Common setup for Addition and Swap grow-in animations.
-    ///
-    /// Seeds the container width to `seed`, sets the target, and — if
-    /// `grow_in_indicators` is non-empty — enables `suppress_reconcile`
-    /// and starts the convergence tick callback that waits for CSS
-    /// transitions to settle before allowing reconciliation.
-    fn begin_grow_in_animation(&self, seed: f64, target: i32, grow_in_indicators: Vec<Widget>) {
-        self.seed_current_width(seed);
-        self.set_target_width(target);
-        if !grow_in_indicators.is_empty() {
-            self.imp().suppress_reconcile.set(true);
-            self.start_grow_in_convergence(grow_in_indicators);
-        }
-    }
-
-    /// Start the two-phase grow-in convergence tick callback.
-    ///
-    /// Used by both Addition and Swap handlers to animate newly-created
-    /// indicators. The callback progresses through three phases:
-    ///
-    /// - **Phase 0** (tick 1): Remove `WORKSPACE_GROW_IN_NOTRANS` — re-enables
-    ///   CSS transitions while indicators stay at `min-width: 0`.
-    /// - **Phase 1** (tick 2): Remove `WORKSPACE_GROW_IN` — `min-width` changes
-    ///   from 0 to the CSS-defined value, firing the CSS transition.
-    /// - **Phase 2+** (subsequent ticks): Convergence detection — waits for
-    ///   `CONVERGENCE_STABLE_FRAMES` consecutive frames where `children_width`
-    ///   changes by less than 1px, then clears `suppress_reconcile` and
-    ///   calls `set_target_width()` to smoothly animate any residual mismatch.
-    ///
-    /// Why not use an idle for grow-in removal? When the idle fires before
-    /// the first tick (common), GTK batches the "add class + remove class"
-    /// into one style resolution — the indicator never renders at
-    /// `min-width: 0`, so the CSS transition from 0→full never fires.
-    /// Deferring removal to the first tick guarantees at least one frame
-    /// has been rendered with grow-in committed.
-    ///
-    /// Uses `convergence_*` fields — Addition and Swap are mutually
-    /// exclusive `ChangeType` branches, so the fields are never used
-    /// concurrently. A generation counter lets stale callbacks from
-    /// superseded events self-terminate.
-    fn start_grow_in_convergence(&self, grow_in_indicators: Vec<Widget>) {
-        let imp = self.imp();
-        let generation = imp.convergence_generation.get().wrapping_add(1);
-        imp.convergence_generation.set(generation);
-        imp.convergence_prev_width.set(-1.0);
-        imp.convergence_stable_frames.set(0);
-        imp.convergence_start_time.set(None);
-        let wsc_ref = self.clone();
-        let grow_in_indicators = Rc::new(grow_in_indicators);
-        let phase = Rc::new(Cell::new(0u8));
-        self.add_tick_callback(move |_w, frame_clock| {
-            let imp = wsc_ref.imp();
-
-            if imp.convergence_generation.get() != generation {
-                return glib::ControlFlow::Break;
-            }
-
-            if !imp.suppress_reconcile.get() {
-                return glib::ControlFlow::Break;
-            }
-
-            let current_phase = phase.get();
-
-            if current_phase == 0 {
-                for ind in grow_in_indicators.iter() {
-                    ind.remove_css_class(widget::WORKSPACE_GROW_IN_NOTRANS);
-                }
-                phase.set(1);
-                return glib::ControlFlow::Continue;
-            }
-
-            if current_phase == 1 {
-                // Remove grow-in — CSS transition fires.
-                for ind in grow_in_indicators.iter() {
-                    ind.remove_css_class(widget::WORKSPACE_GROW_IN);
-                }
-                // Record the time the CSS transition starts so we can
-                // enforce a minimum wait before accepting convergence.
-                imp.convergence_start_time
-                    .set(Some(frame_clock.frame_time()));
-                phase.set(2);
-                return glib::ControlFlow::Continue;
-            }
-
-            let now = frame_clock.frame_time();
-
-            let start = match imp.convergence_start_time.get() {
-                Some(t) => t,
-                None => {
-                    // Should not happen (set in phase 1), but handle gracefully.
-                    imp.convergence_start_time.set(Some(now));
-                    now
-                }
-            };
-
-            // Safety cap: clear after 2s to prevent stuck state.
-            if now - start > CONVERGENCE_SAFETY_CAP_US {
-                imp.suppress_reconcile.set(false);
-                return glib::ControlFlow::Break;
-            }
-
-            let flow = if imp.axis_vertical.get() {
-                gtk4::Orientation::Vertical
-            } else {
-                gtk4::Orientation::Horizontal
-            };
-            let current = sum_children_widths(&imp.children.borrow(), imp.gap.get(), flow) as f64;
-            let prev = imp.convergence_prev_width.get();
-
-            // Wait for the CSS transition to finish before accepting
-            // convergence. Label widgets have intrinsic text width that
-            // can look "stable" before min-width has actually transitioned.
-            let transition_elapsed = now - start >= INDICATOR_ANIM_DURATION_US;
-
-            if transition_elapsed && prev >= 0.0 && (current - prev).abs() < 1.0 {
-                let frames = imp.convergence_stable_frames.get() + 1;
-                if frames >= CONVERGENCE_STABLE_FRAMES {
-                    // Converged — clear suppress and animate residual mismatch.
-                    imp.suppress_reconcile.set(false);
-                    let final_w = current.round() as i32;
-                    wsc_ref.set_target_width(final_w);
-                    return glib::ControlFlow::Break;
-                }
-                imp.convergence_stable_frames.set(frames);
-            } else {
-                imp.convergence_stable_frames.set(0);
-            }
-
-            imp.convergence_prev_width.set(current);
-            glib::ControlFlow::Continue
-        });
-    }
 }
 
-/// Sum the current natural flow extents of `children` plus inter-child gaps.
-///
-/// Each child is measured along the flow axis to get its live CSS-transitioning
-/// extent, so the result tracks in-flight CSS transitions frame by frame.
-///
-/// Note: not unit-tested because `Widget::measure()` requires a GTK display
-/// server.  The gap arithmetic is trivially `(n-1) * gap`; the function is
-/// exercised end-to-end by the layout's `size_allocate` path.
-fn sum_children_widths(children: &[Widget], gap: i32, flow: gtk4::Orientation) -> i32 {
-    let n = children.len();
-    if n == 0 {
-        return 0;
-    }
-    let mut total = 0i32;
-    for child in children {
-        let (_, cw, _, _) = child.measure(flow, -1);
-        total += cw;
-    }
-    total + (n as i32 - 1) * gap
+/// Switch/addition duration (linear). Vertical growth reads faster than
+/// horizontal at the same duration, so it gets a shorter one.
+const SWITCH_DURATION_US: f64 = 200_000.0;
+const SWITCH_DURATION_VERTICAL_US: f64 = 150_000.0;
+/// Removal (gap closing) duration, ease-out, both orientations.
+const REMOVAL_DURATION_US: f64 = 200_000.0;
+
+fn ease_out_quad(t: f64) -> f64 {
+    1.0 - (1.0 - t).powi(2)
 }
 
-/// Compute the left-group size for the two-group layout split.
-///
-/// Splits `n` children into a left group (laid out left-to-right) and a right
-/// group (laid out right-to-left), with the gap between them absorbing
-/// subpixel rounding drift during CSS transitions.
-///
-/// Rules:
-/// - Active child is the last in the left group (split after it).
-/// - If active is the last child, keep it in the left group but ensure the
-///   right group has at least 1 child to anchor from the right edge.
-/// - If no active child, fall back to a midpoint split.
-fn compute_left_count(n: usize, active_idx: Option<usize>) -> usize {
-    debug_assert!(n >= 2, "compute_left_count requires n >= 2, got {n}");
-    match active_idx {
-        Some(idx) if idx < n - 1 => idx + 1,
-        Some(_) => n - 1,      // active is last: right group = [last]
-        None => n.div_ceil(2), // fallback midpoint
+/// Integer `(pos, size)` per extent, rounded from the cumulative sum so the
+/// total is always `round(sum)` regardless of per-child rounding.
+fn slot_layout(extents: impl Iterator<Item = f64>) -> Vec<(i32, i32)> {
+    let mut acc = 0.0;
+    let mut prev = 0;
+    extents
+        .map(|x| {
+            acc += x;
+            let end = acc.round() as i32;
+            let slot = (prev, end - prev);
+            prev = end;
+            slot
+        })
+        .collect()
+}
+
+/// `new` order, with ids that disappeared kept right after their old
+/// predecessor so their slot can close in place.
+fn merge_ids(old: &[i32], new: &[i32]) -> Vec<i32> {
+    let mut out = new.to_vec();
+    let mut prev: Option<i32> = None;
+    for &id in old {
+        if !new.contains(&id) {
+            let at = prev
+                .and_then(|p| out.iter().position(|&x| x == p))
+                .map_or(0, |i| i + 1);
+            out.insert(at, id);
+        }
+        prev = Some(id);
     }
+    out
 }
 
 /// Label type for workspace indicators.
@@ -837,10 +653,10 @@ const DEFAULT_LABEL_TYPE: LabelType = LabelType::None;
 const DEFAULT_SEPARATOR: &str = "";
 
 /// Multiplier for inactive indicator width relative to widget_height.
-/// Used in CSS generation (bar.rs) for min-width on inactive indicators.
+/// Also drives the per-instance long-indicator min-width rules.
 pub(crate) const INDICATOR_INACTIVE_MULT: f64 = 0.7;
 /// Multiplier for active indicator width relative to widget_height.
-/// Used in CSS generation (bar.rs) for min-width on active indicators.
+/// Used in CSS generation (css/bar.rs) for min-width on active indicators.
 pub(crate) const INDICATOR_ACTIVE_MULT: f64 = 1.0;
 /// Horizontal padding per side (px) for long (named) indicators.
 pub(crate) const LONG_INDICATOR_HPAD: i32 = 6;
@@ -1108,17 +924,10 @@ impl WorkspacesWidget {
             .animate
             .unwrap_or_else(|| ConfigManager::global().animations_enabled());
 
-        // Cache theme sizes at construction time. These values are derived
-        // from bar.size/bar.padding, and any change to those triggers a full
-        // bar rebuild (section change → reconfigure_all), which
-        // destroys and recreates this widget with fresh values.
         // Animated mode uses WorkspaceContainer; otherwise indicators go in the GtkBox.
         let ws_container: Option<WorkspaceContainer> = if animate {
             let container = WorkspaceContainer::new();
             container.set_axis_vertical(is_vertical);
-            // Inter-indicator spacing is CSS margin-based so user density
-            // offsets affect animated and non-animated workspaces consistently.
-            container.set_gap(0);
             base.content().append(&container);
             Some(container)
         } else {
@@ -1278,46 +1087,11 @@ const ICON_OCCUPIED: &str = "●";
 const ICON_EMPTY: &str = "○";
 const ICON_ACTIVE: &str = "◆";
 
-/// Duration of the enter/exit animation for workspace indicators (in microseconds).
-/// Matches the CSS transition duration on `.workspace-indicator`.
-const INDICATOR_ANIM_DURATION_US: i64 = 200_000;
-
-/// Number of consecutive frames where children width must be stable (delta < 1px)
-/// before we consider CSS transitions settled. 3 frames guards against false
-/// positives from non-linear easing functions (ease-in-out) that have
-/// near-zero-velocity zones at inflection points.
-const CONVERGENCE_STABLE_FRAMES: u32 = 3;
-
-/// Safety cap for convergence detection (microseconds). If children widths
-/// haven't stabilized after this long, clear suppress_reconcile anyway to
-/// prevent stuck state. 2 seconds accommodates even extreme custom CSS
-/// transition durations.
-const CONVERGENCE_SAFETY_CAP_US: i64 = 2_000_000;
-
-/// Clear all workspace indicator widgets from the container.
-fn clear_indicators(
-    container: &GtkBox,
-    ws_container: Option<&WorkspaceContainer>,
-    labels: &Rc<RefCell<HashMap<i32, Widget>>>,
-    ids: &Rc<RefCell<Vec<i32>>>,
-) {
-    if let Some(wsc) = ws_container {
-        wsc.clear_children();
-    } else {
-        while let Some(child) = container.first_child() {
-            container.remove(&child);
-        }
-    }
-    labels.borrow_mut().clear();
-    ids.borrow_mut().clear();
-}
-
 /// Create a single workspace indicator widget.
 ///
 /// Returns an `Overlay` wrapping the inner dot/label with a ripple effect.
-/// CSS classes for sizing and state go on the overlay so that
-/// `WorkspaceContainer::size_allocate` can detect the active indicator
-/// and `measure()` sees the correct min-width.
+/// CSS classes for sizing and state go on the overlay, so its measured size
+/// follows the active/long state.
 fn create_single_indicator(
     scroll_focus: &Rc<WorkspaceScrollFocus>,
     label_type: LabelType,
@@ -1353,6 +1127,7 @@ fn create_single_indicator(
         overlay.add_css_class(widget::WORKSPACE_INDICATOR_LONG);
         overlay.add_css_class(&ws_mw_class(workspace_id));
     }
+    // Non-animated mode only; WorkspaceContainer overrides to Fill.
     overlay.set_valign(Align::Center);
     overlay.set_halign(Align::Center);
 
@@ -1380,180 +1155,32 @@ fn create_single_indicator(
     overlay.upcast()
 }
 
-/// Create workspace indicator widgets for the given workspaces.
-#[allow(clippy::too_many_arguments)]
+/// Recreate all indicators in the plain (non-animated) GtkBox.
 fn create_indicators(
     scroll_focus: &Rc<WorkspaceScrollFocus>,
     container: &GtkBox,
-    ws_container: Option<&WorkspaceContainer>,
-    labels_cell: &Rc<RefCell<HashMap<i32, Widget>>>,
-    ids_cell: &Rc<RefCell<Vec<i32>>>,
+    labels: &mut HashMap<i32, Widget>,
     label_type: LabelType,
     separator: &str,
     workspaces: &[Workspace],
     is_vertical: bool,
 ) {
-    clear_indicators(container, ws_container, labels_cell, ids_cell);
-
-    let mut labels = labels_cell.borrow_mut();
-    let mut ids = ids_cell.borrow_mut();
+    while let Some(child) = container.first_child() {
+        container.remove(&child);
+    }
+    labels.clear();
 
     for (i, workspace) in workspaces.iter().enumerate() {
         let indicator = create_single_indicator(scroll_focus, label_type, workspace, is_vertical);
-
         labels.insert(workspace.id, indicator.clone());
-        if let Some(wsc) = ws_container {
-            wsc.add_child(&indicator);
-        } else {
-            container.append(&indicator);
-        }
-        ids.push(workspace.id);
+        container.append(&indicator);
 
-        if !is_vertical
-            && ws_container.is_none()
-            && i < workspaces.len() - 1
-            && !separator.is_empty()
-        {
+        if !is_vertical && i < workspaces.len() - 1 && !separator.is_empty() {
             let sep = Label::new(Some(separator));
             sep.set_valign(Align::Center);
             sep.add_css_class(widget::WORKSPACE_SEPARATOR);
             container.append(&sep);
         }
-    }
-}
-
-/// Collect indicators that have the grow-in CSS class.
-fn collect_grow_in_indicators(
-    labels_cell: &Rc<RefCell<HashMap<i32, Widget>>>,
-    new_ids: &[i32],
-) -> Vec<Widget> {
-    let labels = labels_cell.borrow();
-    let mut grow_in = Vec::new();
-    for &id in new_ids {
-        if let Some(ind) = labels.get(&id)
-            && ind.has_css_class(widget::WORKSPACE_GROW_IN)
-        {
-            grow_in.push(ind.clone());
-        }
-    }
-    grow_in
-}
-
-/// Full recreate of indicators with grow-in CSS class on new IDs.
-///
-/// Shared by the Swap and Addition paths: calls `create_indicators` then
-/// tags any indicator whose ID was not in `old_ids` with the grow-in class
-/// so it animates from 0-width to its CSS-defined size.
-#[allow(clippy::too_many_arguments)]
-fn recreate_with_grow_in(
-    scroll_focus: &Rc<WorkspaceScrollFocus>,
-    container: &GtkBox,
-    wsc: &WorkspaceContainer,
-    labels_cell: &Rc<RefCell<HashMap<i32, Widget>>>,
-    ids_cell: &Rc<RefCell<Vec<i32>>>,
-    label_type: LabelType,
-    separator: &str,
-    display_workspaces: &[Workspace],
-    old_ids: &HashSet<i32>,
-    new_ids: &[i32],
-    is_vertical: bool,
-) {
-    create_indicators(
-        scroll_focus,
-        container,
-        Some(wsc),
-        labels_cell,
-        ids_cell,
-        label_type,
-        separator,
-        display_workspaces,
-        is_vertical,
-    );
-    if !old_ids.is_empty() {
-        let labels = labels_cell.borrow();
-        for &id in new_ids {
-            if old_ids.contains(&id) {
-                continue;
-            }
-            if let Some(indicator) = labels.get(&id) {
-                indicator.add_css_class(widget::WORKSPACE_GROW_IN);
-                indicator.add_css_class(widget::WORKSPACE_GROW_IN_NOTRANS);
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// ChangeType — classifies how the visible workspace set changed.
-// ---------------------------------------------------------------------------
-
-/// What kind of change occurred to the set of visible workspace IDs.
-///
-/// Used by `update_indicators` to decide which animation path to take.
-/// Extracted as a module-level type so `classify_change()` can be tested
-/// independently of GTK widget logic.
-#[derive(Debug, PartialEq)]
-enum ChangeType {
-    /// No animation action needed (IDs unchanged, or non-minimal mode).
-    None,
-    /// IDs were removed but none added (minimal mode only).
-    Removal,
-    /// Same IDs in a different order (e.g., workspace reorder in Niri).
-    Reorder,
-    /// New workspace IDs appeared (minimal mode only). Also covers
-    /// simultaneous add+remove (e.g., `[1,2,3] → [1,4]`): the full
-    /// recreate replaces all indicators at once — removed workspaces
-    /// don't get a removal animation since GTK4 can't animate on
-    /// `unparent()` anyway.
-    Addition,
-    /// IDs changed but total count stayed the same (e.g., ws4→ws5).
-    /// Full recreate with grow-in on new indicators. Container is
-    /// pinned at pre-recreate width; convergence detection clears
-    /// suppress_reconcile once CSS transitions settle.
-    Swap,
-}
-
-/// Pure classification of how the visible workspace set changed.
-///
-/// Inputs:
-/// - `ids_changed`: whether `new_ids != old_ids` (order-sensitive)
-/// - `has_additions`: whether any ID in `new_ids` is not in `old_ids`
-/// - `old_ids_empty`: whether the old ID set is empty
-/// - `old_count`: number of old IDs
-/// - `new_count`: number of new IDs
-/// - `is_minimal`: whether a `WorkspaceContainer` is present (minimal mode)
-///
-/// This function has no side effects — the caller uses the result to decide
-/// which animation/recreation path to take.
-fn classify_change(
-    ids_changed: bool,
-    has_additions: bool,
-    old_ids_empty: bool,
-    old_count: usize,
-    new_count: usize,
-    is_minimal: bool,
-) -> ChangeType {
-    if !ids_changed {
-        return ChangeType::None;
-    }
-
-    if !is_minimal {
-        // Non-minimal: no animations.
-        return ChangeType::None;
-    }
-
-    if !has_additions && !old_ids_empty {
-        if old_count == new_count {
-            // Same IDs, different order — pure reorder (e.g., user reordered in Niri).
-            ChangeType::Reorder
-        } else {
-            ChangeType::Removal
-        }
-    } else if new_count == old_count {
-        // Note: old_ids_empty with equal counts is unreachable (both would be 0).
-        ChangeType::Swap
-    } else {
-        ChangeType::Addition
     }
 }
 
@@ -1674,203 +1301,39 @@ fn update_indicators(
             .collect::<Vec<_>>()
     );
 
-    if display_workspaces.is_empty() {
-        let current_ids = ids_cell.borrow();
-        if !current_ids.is_empty() {
-            drop(current_ids);
-            clear_indicators(container, ws_container, labels_cell, ids_cell);
-        }
-        if let Some(wsc) = ws_container {
-            wsc.set_target_width(0);
-        }
-        return;
-    }
-
     let new_ids: Vec<i32> = display_workspaces.iter().map(|ws| ws.id).collect();
-
     let ids_changed = new_ids != *ids_cell.borrow();
 
-    let old_ids: HashSet<i32> = ids_cell.borrow().iter().copied().collect();
-    let new_ids_set: HashSet<i32> = new_ids.iter().copied().collect();
-    let has_additions = ids_changed && new_ids_set.iter().any(|id| !old_ids.contains(id));
-
-    let change_type = classify_change(
-        ids_changed,
-        has_additions,
-        old_ids.is_empty(),
-        old_ids.len(),
-        new_ids.len(),
-        ws_container.is_some(),
-    );
-
-    // Saved before full-recreate in the additions/swap paths so the
-    // container animation starts from the visually correct width (grow-in
-    // indicators measure as 0, making post-recreate measurement unreliable).
-    let mut pre_recreate_width: Option<f64> = None;
-
     if ids_changed {
-        // Three paths: A. Removal-only, B. Addition/swap, C. Non-minimal (no animation).
+        let mut labels = labels_cell.borrow_mut();
         if let Some(wsc) = ws_container {
-            match change_type {
-                ChangeType::Removal => {
-                    // ── Path A: Removal-only — surgically remove departed indicators. ──
-
-                    let pre_removal_width = wsc.compute_children_current_width();
-
-                    // Freeze the left-group split at the OLD active-based
-                    // split so surviving indicators stay in their original
-                    // groups while the container animates down.
-                    let children = wsc.imp().children.borrow();
-                    let n = children.len();
-                    let active_css = crate::styles::widget::ACTIVE;
-                    let active_idx = children.iter().position(|c| c.has_css_class(active_css));
-                    let frozen = if n >= 2 {
-                        compute_left_count(n, active_idx)
-                    } else {
-                        n
-                    };
-                    drop(children);
-
-                    // Cancel any pending switch-freeze timeout — the removal
-                    // freeze supersedes it.
-                    wsc.cancel_switch_freeze_timeout();
-
-                    wsc.imp().frozen_left_count.set(Some(frozen));
-
-                    {
-                        let mut labels = labels_cell.borrow_mut();
-                        let ids = ids_cell.borrow();
-                        let mut left_removed = 0usize;
-                        for (i, &id) in ids.iter().enumerate() {
-                            if new_ids_set.contains(&id) {
-                                continue;
-                            }
-                            if i < frozen {
-                                left_removed += 1;
-                            }
-                            if let Some(indicator) = labels.remove(&id) {
-                                wsc.remove_child(&indicator);
-                            }
-                        }
-                        drop(ids);
-                        ids_cell.borrow_mut().retain(|id| new_ids_set.contains(id));
-                        wsc.adjust_frozen_left_count(left_removed);
-                    }
-
-                    wsc.seed_current_width(pre_removal_width as f64);
-                }
-                ChangeType::Reorder => {
-                    // ── Path A2: Reorder — same IDs, different order. ──
-                    // Full recreate without grow-in; container width unchanged.
-                    recreate_with_grow_in(
-                        scroll_focus,
-                        container,
-                        wsc,
-                        labels_cell,
-                        ids_cell,
-                        label_type,
-                        separator,
-                        &display_workspaces,
-                        &old_ids,
-                        &new_ids,
-                        is_vertical,
-                    );
-                }
-                ChangeType::Swap => {
-                    // ── Path B1: Swap — same count, different IDs. ──
-                    pre_recreate_width = Some(wsc.imp().current_width.get());
-
-                    recreate_with_grow_in(
-                        scroll_focus,
-                        container,
-                        wsc,
-                        labels_cell,
-                        ids_cell,
-                        label_type,
-                        separator,
-                        &display_workspaces,
-                        &old_ids,
-                        &new_ids,
-                        is_vertical,
-                    );
-                }
-                ChangeType::Addition => {
-                    // ── Path B2: Net additions ──
-                    // Save pre-recreate width (grow-in indicators measure
-                    // as 0, making post-recreate measurement unreliable).
-                    pre_recreate_width = Some(wsc.imp().current_width.get());
-
-                    recreate_with_grow_in(
-                        scroll_focus,
-                        container,
-                        wsc,
-                        labels_cell,
-                        ids_cell,
-                        label_type,
-                        separator,
-                        &display_workspaces,
-                        &old_ids,
-                        &new_ids,
-                        is_vertical,
-                    );
-                }
-                ChangeType::None => {
-                    // Unreachable in practice.
-                    debug_assert!(
-                        false,
-                        "classify_change returned None with ids_changed=true and is_minimal=true"
-                    );
-                }
+            // Keep existing indicators (identity + animated extent); the
+            // container diffs by ID and animates additions/removals.
+            labels.retain(|id, _| new_ids.contains(id));
+            for ws in &display_workspaces {
+                labels.entry(ws.id).or_insert_with(|| {
+                    create_single_indicator(scroll_focus, label_type, ws, is_vertical)
+                });
             }
+            wsc.set_children(new_ids.iter().map(|id| (*id, labels[id].clone())).collect());
         } else {
-            // Non-minimal — full recreate.
             create_indicators(
                 scroll_focus,
                 container,
-                None,
-                labels_cell,
-                ids_cell,
+                &mut labels,
                 label_type,
                 separator,
                 &display_workspaces,
                 is_vertical,
             );
         }
+        *ids_cell.borrow_mut() = new_ids;
     }
 
-    // ── Freeze left-group split during pure switches ──
-    // Use max(old, new) left_count so indicators stay anchored while CSS
-    // min-width transitions resolve.
-    let mut did_switch_freeze = false;
-    if matches!(change_type, ChangeType::None)
-        && let Some(wsc) = ws_container
-    {
-        let already_frozen = wsc.imp().frozen_left_count.get().is_some();
-        let children = wsc.imp().children.borrow();
-        let n = children.len();
-        let old_active_idx = if n >= 2 && !already_frozen {
-            let active_css = crate::styles::widget::ACTIVE;
-            Some(children.iter().position(|c| c.has_css_class(active_css)))
-        } else {
-            None
-        };
-        drop(children);
-
-        if let Some(old_active_idx) = old_active_idx {
-            let new_active_idx = display_workspaces.iter().position(|ws| ws.active);
-            if old_active_idx != new_active_idx {
-                let old_lc = compute_left_count(n, old_active_idx);
-                let new_lc = compute_left_count(n, new_active_idx);
-                let frozen = old_lc.max(new_lc);
-                wsc.imp().frozen_left_count.set(Some(frozen));
-                did_switch_freeze = true;
-            }
-        }
-    }
-
-    // ── Shared styling tail — update CSS before measuring (active changes min-width). ──
+    // ── Styling — CSS class changes resize indicators; the container picks
+    // the new sizes up in its next measure() and animates towards them. ──
     let labels = labels_cell.borrow();
-    let mut long_indicator_changed = ids_changed; // If IDs changed, indicators were recreated.
+    let mut long_indicator_changed = ids_changed; // New indicators may be long.
     for workspace in &display_workspaces {
         let Some(indicator) = labels.get(&workspace.id) else {
             continue;
@@ -1948,92 +1411,6 @@ fn update_indicators(
 
     if long_indicator_changed && let Some(wsc) = ws_container {
         wsc.update_long_indicator_css(&labels_cell.borrow());
-    }
-
-    // ── Container target width — may be stale; tick callback corrects per-frame. ──
-    if let Some(wsc) = ws_container {
-        match change_type {
-            ChangeType::Addition => {
-                let grow_in_indicators = collect_grow_in_indicators(labels_cell, &new_ids);
-
-                debug_assert!(
-                    pre_recreate_width.is_some(),
-                    "Addition: pre_recreate_width should be set before recreate"
-                );
-                let seed = pre_recreate_width
-                    .unwrap_or_else(|| wsc.compute_children_current_width() as f64);
-
-                // Approximate target to start tick callback; accuracy doesn't
-                // matter — tick tracks children_width while suppress_reconcile active.
-                let wh = ConfigManager::global().theme_sizes().widget_height as f64;
-                let gap = wsc.imp().gap.get();
-                let added_width: f64 = display_workspaces
-                    .iter()
-                    .filter(|ws| !old_ids.contains(&ws.id))
-                    .map(|ws| {
-                        let mult = if ws.active {
-                            INDICATOR_ACTIVE_MULT
-                        } else {
-                            INDICATOR_INACTIVE_MULT
-                        };
-                        (wh * mult).floor() + gap as f64
-                    })
-                    .sum();
-                let initial_target = (seed + added_width).round() as i32;
-
-                wsc.begin_grow_in_animation(seed, initial_target, grow_in_indicators);
-            }
-            ChangeType::Removal => {
-                // Target may be stale; tick callback corrects via
-                // live target correction + floor-clamp.
-                let target = wsc.compute_children_current_width();
-                wsc.set_target_width(target);
-            }
-            ChangeType::Reorder => {
-                // Same count, just reordered — snap to current width.
-                let target = wsc.compute_children_current_width();
-                wsc.set_target_width(target);
-            }
-            ChangeType::Swap => {
-                // Pin at pre-recreate width; reconciliation animates after CSS settles.
-                let grow_in_indicators = collect_grow_in_indicators(labels_cell, &new_ids);
-
-                debug_assert!(
-                    pre_recreate_width.is_some(),
-                    "Swap: pre_recreate_width should be set before recreate"
-                );
-                let seed = pre_recreate_width
-                    .unwrap_or_else(|| wsc.compute_children_current_width() as f64);
-
-                wsc.begin_grow_in_animation(seed, seed.round() as i32, grow_in_indicators);
-            }
-            ChangeType::None => {
-                // Switch-only — skip if suppress_reconcile active (prior grow-in resolving)
-                // or if we didn't actually set a switch freeze (removal freeze in progress).
-                if !wsc.imp().suppress_reconcile.get() && did_switch_freeze {
-                    // Cancel prior switch-freeze timeout (rapid switches).
-                    wsc.cancel_switch_freeze_timeout();
-                    // Clear freeze after CSS transitions complete
-                    // (duration must match CSS transition — see bar.rs).
-                    let wsc_ref = wsc.clone();
-                    let source_id = glib::timeout_add_local_once(
-                        std::time::Duration::from_micros(INDICATOR_ANIM_DURATION_US as u64),
-                        move || {
-                            wsc_ref.imp().switch_freeze_timeout.borrow_mut().take();
-                            wsc_ref.imp().frozen_left_count.set(None);
-                            wsc_ref.queue_resize();
-                        },
-                    );
-                    wsc.imp()
-                        .switch_freeze_timeout
-                        .borrow_mut()
-                        .replace(source_id);
-
-                    let target = wsc.compute_children_current_width();
-                    wsc.set_target_width(target);
-                }
-            }
-        }
     }
 }
 
@@ -2356,56 +1733,6 @@ mod tests {
         assert!(!show_unoccupied_ids.contains(&4));
     }
 
-    // -- compute_left_count tests --
-
-    #[test]
-    fn test_compute_left_count_active_first() {
-        // n=5, active=0 → left=[0], right=[1,2,3,4]
-        assert_eq!(compute_left_count(5, Some(0)), 1);
-    }
-
-    #[test]
-    fn test_compute_left_count_active_middle() {
-        // n=5, active=2 → left=[0,1,2], right=[3,4]
-        assert_eq!(compute_left_count(5, Some(2)), 3);
-    }
-
-    #[test]
-    fn test_compute_left_count_active_second_to_last() {
-        // n=5, active=3 → left=[0,1,2,3], right=[4]
-        assert_eq!(compute_left_count(5, Some(3)), 4);
-    }
-
-    #[test]
-    fn test_compute_left_count_active_last() {
-        // n=5, active=4 → left=[0,1,2,3], right=[4] (right-anchored)
-        assert_eq!(compute_left_count(5, Some(4)), 4);
-    }
-
-    #[test]
-    fn test_compute_left_count_no_active() {
-        // n=5, no active → midpoint split: left=[0,1,2], right=[3,4]
-        assert_eq!(compute_left_count(5, None), 3);
-    }
-
-    #[test]
-    fn test_compute_left_count_no_active_even() {
-        // n=4, no active → midpoint split: left=[0,1], right=[2,3]
-        assert_eq!(compute_left_count(4, None), 2);
-    }
-
-    #[test]
-    fn test_compute_left_count_two_active_first() {
-        // n=2, active=0 → left=[0], right=[1]
-        assert_eq!(compute_left_count(2, Some(0)), 1);
-    }
-
-    #[test]
-    fn test_compute_left_count_two_active_last() {
-        // n=2, active=1 → left=[0], right=[1] (active-is-last rule)
-        assert_eq!(compute_left_count(2, Some(1)), 1);
-    }
-
     // -- build_tooltip tests --
 
     fn make_workspace(
@@ -2473,96 +1800,36 @@ mod tests {
         assert_eq!(build_tooltip(&ws), "Workspace web • Active • 2 windows");
     }
 
-    // -- classify_change tests --
+    // -- container layout helpers --
 
     #[test]
-    fn test_classify_no_change() {
-        // IDs didn't change at all.
-        assert_eq!(
-            classify_change(false, false, false, 3, 3, true),
-            ChangeType::None
-        );
+    fn test_merge_ids_keeps_removed_in_place() {
+        assert_eq!(merge_ids(&[1, 2, 3], &[1, 3]), vec![1, 2, 3]);
+        assert_eq!(merge_ids(&[1, 2, 3], &[2, 3]), vec![1, 2, 3]);
+        assert_eq!(merge_ids(&[1, 2, 3], &[1, 2]), vec![1, 2, 3]);
+        // Swap: old shrinks out right before the newcomer.
+        assert_eq!(merge_ids(&[1, 4], &[1, 5]), vec![1, 4, 5]);
+        assert_eq!(merge_ids(&[1, 2], &[3]), vec![1, 2, 3]);
+        assert_eq!(merge_ids(&[], &[1, 2]), vec![1, 2]);
+        assert_eq!(merge_ids(&[3, 1, 2], &[1, 2, 3]), vec![1, 2, 3]);
     }
 
     #[test]
-    fn test_classify_no_change_non_minimal() {
-        // IDs didn't change, non-minimal mode.
-        assert_eq!(
-            classify_change(false, false, false, 3, 3, false),
-            ChangeType::None
-        );
-    }
+    fn test_slot_layout_is_contiguous_and_total_is_rounded_sum() {
+        let slots = slot_layout([10.4, 10.4, 10.4].into_iter());
+        assert_eq!(slots, vec![(0, 10), (10, 11), (21, 10)]);
 
-    #[test]
-    fn test_classify_removal_only() {
-        // IDs changed, no additions, old not empty, count decreased, minimal mode.
-        // e.g., [1,2,3] → [1,2] — workspace 3 removed.
-        assert_eq!(
-            classify_change(true, false, false, 3, 2, true),
-            ChangeType::Removal
-        );
-    }
-
-    #[test]
-    fn test_classify_reorder() {
-        // IDs changed (different order), no additions, same count, minimal mode.
-        // e.g., [1,6,2,15] → [1,2,6,15] — user reordered workspaces.
-        assert_eq!(
-            classify_change(true, false, false, 4, 4, true),
-            ChangeType::Reorder
-        );
-    }
-
-    #[test]
-    fn test_classify_swap() {
-        // IDs changed, has additions, same count, minimal mode.
-        // e.g., [1,2,3] → [1,2,4] — workspace 3→4 swap.
-        assert_eq!(
-            classify_change(true, true, false, 3, 3, true),
-            ChangeType::Swap
-        );
-    }
-
-    #[test]
-    fn test_classify_addition() {
-        // IDs changed, has additions, count increased, minimal mode.
-        // e.g., [1,2] → [1,2,3] — workspace 3 added.
-        assert_eq!(
-            classify_change(true, true, false, 2, 3, true),
-            ChangeType::Addition
-        );
-    }
-
-    #[test]
-    fn test_classify_non_minimal_returns_none() {
-        // Non-minimal mode always returns None (no animations),
-        // even when IDs changed with additions.
-        assert_eq!(
-            classify_change(true, true, false, 2, 3, false),
-            ChangeType::None
-        );
-    }
-
-    #[test]
-    fn test_classify_initial_population() {
-        // Old IDs empty, new IDs populated, minimal mode.
-        // has_additions=true (all new), old_count=0, new_count=3.
-        // This is a net addition (first workspace creation).
-        assert_eq!(
-            classify_change(true, true, true, 0, 3, true),
-            ChangeType::Addition
-        );
-    }
-
-    #[test]
-    fn test_classify_removal_not_triggered_with_additions() {
-        // Even if count decreases, if there are additions it's not
-        // a pure removal. e.g., [1,2,3] → [1,4] — ws 2,3 removed,
-        // ws 4 added. has_additions=true, so it falls through to
-        // Addition (count decreased: 3→2).
-        assert_eq!(
-            classify_change(true, true, false, 3, 2, true),
-            ChangeType::Addition
-        );
+        // Switch mid-animation: one grows, one shrinks by the same amount.
+        // The total must stay fixed for every interpolation step.
+        let (inactive, active, gap) = (17.0, 24.0, 6.0);
+        for step in 0..=20 {
+            let k = step as f64 / 20.0;
+            let a = active + gap + (inactive - active) * k;
+            let b = inactive + gap + (active - inactive) * k;
+            let slots = slot_layout([a, b, inactive].into_iter());
+            let (pos, size) = *slots.last().unwrap();
+            assert_eq!(pos + size, 70, "step {step}");
+            assert!(slots.windows(2).all(|w| w[0].0 + w[0].1 == w[1].0));
+        }
     }
 }

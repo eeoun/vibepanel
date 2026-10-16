@@ -10,22 +10,15 @@ use crate::widgets::workspaces::{INDICATOR_ACTIVE_MULT, LONG_INDICATOR_HPAD};
 ///
 /// `workspace_animations` is the resolved per-widget animation flag: it
 /// equals the explicit `[widgets.workspaces] animate` value when set,
-/// otherwise falls back to the global `theme.animations` setting.  This
-/// lets `workspaces.animate = true` keep workspace indicator CSS transitions
-/// alive even when `theme.animations = false`.
+/// otherwise falls back to the global `theme.animations` setting. It only
+/// gates the indicators' background-color transition; size animation is
+/// owned by `WorkspaceContainer`.
 pub fn css(screen_margin: u32, spacing: u32, workspace_animations: bool) -> String {
     let widget_bg = WIDGET_BG_WITH_OPACITY;
     let active_mult = INDICATOR_ACTIVE_MULT;
     let long_hpad = LONG_INDICATOR_HPAD;
-    // Vertical workspace indicators grow along the physical Y axis, which reads
-    // faster than horizontal growth at the same duration; tune it separately.
     let workspace_transition = if workspace_animations {
-        "transition: min-width 200ms linear, min-height 200ms linear, background-color 100ms ease;"
-    } else {
-        "transition: none;"
-    };
-    let workspace_transition_vertical = if workspace_animations {
-        "transition: min-width 150ms linear, min-height 150ms linear, background-color 100ms ease;"
+        "transition: background-color 100ms ease;"
     } else {
         "transition: none;"
     };
@@ -421,11 +414,6 @@ sectioned-bar.bar.bar--vertical {{
     border-radius: calc(var(--radius-pill) * 1.2);
     color: var(--color-foreground-faint);
     {workspace_transition}
-    /* horizontal: min-width duration matches INDICATOR_ANIM_DURATION_US in workspaces.rs */
-}}
-
-.bar--vertical .workspace-indicator {{
-    {workspace_transition_vertical}
 }}
 
 /* Override ripple overlay fallback radius (overlay.vp-ripple-wrap uses --radius-widget) */
@@ -475,17 +463,14 @@ overlay.workspace-indicator {{
     padding: 0;
 }}
 
-workspace-container > .workspace-indicator:not(:last-child) {{
+workspace-container > .workspace-indicator {{
     margin-right: var(--vp-widget-gap);
 }}
 
-.bar--vertical workspace-container > .workspace-indicator:not(:last-child) {{
+.bar--vertical workspace-container > .workspace-indicator {{
     margin-right: 0;
     margin-bottom: var(--vp-widget-gap);
 }}
-
-/* Grow-in: forces zero width + no transition so container animation handles it.
-   Loaded at USER+200 priority by load_transient_css() so user CSS can't defeat it. */
 
 /* ===== TASKBAR ===== */
 /* Button padding + border-radius are applied via a shared CssProvider so

@@ -551,16 +551,6 @@ pub mod widget {
     /// Adds horizontal padding for labels longer than 2 characters.
     pub const WORKSPACE_INDICATOR_LONG: &str = "workspace-indicator-long";
 
-    /// Workspace indicator grow-in: forces zero width (`.workspace-grow-in`).
-    /// Registered at transient CSS priority (above user CSS) to ensure
-    /// user style.css cannot accidentally defeat the min-width: 0 reset.
-    pub const WORKSPACE_GROW_IN: &str = "workspace-grow-in";
-
-    /// Workspace indicator grow-in: suppresses CSS transitions
-    /// (`.workspace-grow-in-notrans`). Removed one frame before
-    /// `WORKSPACE_GROW_IN` so the `min-width` transition can fire.
-    pub const WORKSPACE_GROW_IN_NOTRANS: &str = "workspace-grow-in-notrans";
-
     /// Workspace separator (`.workspace-separator`).
     pub const WORKSPACE_SEPARATOR: &str = "workspace-separator";
 

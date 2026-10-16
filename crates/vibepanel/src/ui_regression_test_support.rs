@@ -349,12 +349,26 @@ pub(crate) fn sample_widget_pixel(
     x: i32,
     y: i32,
 ) -> Rgba8 {
-    let width = root.width();
-    let height = root.height();
-    assert!(
-        width > 0 && height > 0,
-        "widget should be allocated before sampling pixels"
-    );
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
+    let paintable = gtk4::WidgetPaintable::new(Some(root));
+    let (width, height, node) = loop {
+        // Deferred resizes need another frame; draining pending events alone
+        // can leave WidgetPaintable empty while allocation is still queued.
+        flush_gtk();
+        let (width, height) = (root.width(), root.height());
+        if width > 0 && height > 0 {
+            let snapshot = gtk4::Snapshot::new();
+            paintable.snapshot(&snapshot, f64::from(width), f64::from(height));
+            if let Some(node) = snapshot.to_node() {
+                break (width, height, node);
+            }
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "widget paintable snapshot should produce a render node within 1s"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    };
     assert!(
         x >= 0 && x < width,
         "sample x={x} outside rendered widget width={width}"
@@ -364,12 +378,6 @@ pub(crate) fn sample_widget_pixel(
         "sample y={y} outside rendered widget height={height}"
     );
 
-    let paintable = gtk4::WidgetPaintable::new(Some(root));
-    let snapshot = gtk4::Snapshot::new();
-    paintable.snapshot(&snapshot, f64::from(width), f64::from(height));
-    let node = snapshot
-        .to_node()
-        .expect("widget paintable snapshot should produce a render node");
     let native = window
         .native()
         .expect("painted fixture should have a native surface");

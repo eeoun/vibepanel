@@ -261,18 +261,12 @@ impl VpnService {
     ///
     /// Called from the UI when the user fills in credentials and clicks Connect.
     pub fn submit_vpn_secrets(&self, secrets: &[(String, String)]) {
-        let setting_name = {
-            let snapshot = self.snapshot.borrow();
-            match snapshot.auth_request {
-                Some(ref req) => req.setting_name.clone(),
-                None => {
-                    warn!("VPN: submit_vpn_secrets called but no auth request pending");
-                    return;
-                }
-            }
-        };
+        if self.snapshot.borrow().auth_request.is_none() {
+            warn!("VPN: submit_vpn_secrets called but no auth request pending");
+            return;
+        }
 
-        VpnSecretAgent::submit_secrets(&setting_name, secrets);
+        VpnSecretAgent::submit_secrets(secrets);
 
         // Clear the auth state
         let mut snapshot = self.snapshot.borrow_mut();
