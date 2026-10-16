@@ -2,9 +2,9 @@
 
 use std::cell::RefCell;
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, Button, Label, Orientation, Separator, Widget};
+use tr::tr;
 
 use crate::services::battery::{
     BatteryService, BatterySnapshot, STATE_CHARGING, STATE_FULLY_CHARGED,
@@ -14,7 +14,7 @@ use crate::styles::{battery as bat, button, color, surface};
 
 fn format_time(seconds: i64) -> String {
     if seconds <= 0 {
-        return gettext("Unknown");
+        return tr!("Unknown");
     }
     let hours = seconds / 3600;
     let minutes = (seconds % 3600) / 60;
@@ -27,7 +27,7 @@ fn format_time(seconds: i64) -> String {
 
 fn format_power(watts: Option<f64>) -> String {
     let Some(watts) = watts else {
-        return gettext("Unknown");
+        return tr!("Unknown");
     };
     if watts < 1.0 {
         format!("{:.1} mW", watts * 1000.0)
@@ -43,13 +43,13 @@ fn format_power(watts: Option<f64>) -> String {
 /// See: https://upower.freedesktop.org/docs/Device.html#Device:State
 fn state_text(state: Option<u32>) -> String {
     match state {
-        Some(STATE_CHARGING) => gettext("Charging"),
-        Some(2) => gettext("Discharging"),
-        Some(3) => gettext("Empty"),
-        Some(STATE_FULLY_CHARGED) => gettext("Full"),
-        Some(5) => gettext("Pending charge"),
-        Some(6) => gettext("Pending discharge"),
-        _ => gettext("Unknown"),
+        Some(STATE_CHARGING) => tr!("Charging"),
+        Some(2) => tr!("Discharging"),
+        Some(3) => tr!("battery state" => "Empty"),
+        Some(STATE_FULLY_CHARGED) => tr!("battery state" => "Full"),
+        Some(5) => tr!("Pending charge"),
+        Some(6) => tr!("Pending discharge"),
+        _ => tr!("Unknown"),
     }
 }
 
@@ -85,7 +85,7 @@ impl BatteryPopoverController {
     pub fn build_profile_section(&self, power_snapshot: &PowerProfileSnapshot) -> GtkBox {
         let section = GtkBox::new(Orientation::Vertical, 8);
 
-        let title = Label::new(Some(&gettext("Power Profile")));
+        let title = Label::new(Some(&tr!("Power Profile")));
         title.add_css_class(surface::POPOVER_TITLE);
         title.set_halign(Align::Start);
         section.append(&title);
@@ -157,7 +157,7 @@ impl BatteryPopoverController {
             self.percent_label
                 .set_label(&format!("{:.0}%", percent.clamp(0.0, 100.0)));
         } else {
-            self.percent_label.set_label(&gettext("Unknown"));
+            self.percent_label.set_label(&tr!("Unknown"));
         }
 
         // Battery state
@@ -169,41 +169,29 @@ impl BatteryPopoverController {
             if state == STATE_CHARGING {
                 if let Some(ttf) = battery_snapshot.time_to_full {
                     self.time_label
-                        .set_label(&gettext("Time until full: {}").replacen(
-                            "{}",
-                            &format_time(ttf),
-                            1,
-                        ));
+                        .set_label(&tr!("Time until full: {time}", time = format_time(ttf)));
                 } else {
-                    self.time_label
-                        .set_label(&gettext("Time until full: Unknown"));
+                    self.time_label.set_label(&tr!("Time until full: Unknown"));
                 }
             } else if state == 2 {
                 if let Some(tte) = battery_snapshot.time_to_empty {
                     self.time_label
-                        .set_label(&gettext("Time remaining: {}").replacen(
-                            "{}",
-                            &format_time(tte),
-                            1,
-                        ));
+                        .set_label(&tr!("Time remaining: {time}", time = format_time(tte)));
                 } else {
-                    self.time_label
-                        .set_label(&gettext("Time remaining: Unknown"));
+                    self.time_label.set_label(&tr!("Time remaining: Unknown"));
                 }
             } else {
-                self.time_label.set_label(&gettext("Time: Unknown"));
+                self.time_label.set_label(&tr!("Time: Unknown"));
             }
         } else {
-            self.time_label.set_label(&gettext("Time: Unknown"));
+            self.time_label.set_label(&tr!("Time: Unknown"));
         }
 
         // Power draw
-        self.power_label
-            .set_label(&gettext("Power draw: {}").replacen(
-                "{}",
-                &format_power(battery_snapshot.energy_rate),
-                1,
-            ));
+        self.power_label.set_label(&tr!(
+            "Power draw: {power}",
+            power = format_power(battery_snapshot.energy_rate)
+        ));
 
         self.refresh_profile_buttons(power_snapshot);
     }
@@ -242,7 +230,7 @@ pub fn build_battery_popover_with_controller() -> (Widget, BatteryPopoverControl
 
     // Battery info section
     let info_section = GtkBox::new(Orientation::Vertical, 8);
-    let title = Label::new(Some(&gettext("Battery Information")));
+    let title = Label::new(Some(&tr!("Battery Information")));
     title.add_css_class(surface::POPOVER_TITLE);
     title.set_halign(Align::Start);
     info_section.append(&title);

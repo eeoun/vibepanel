@@ -8,12 +8,12 @@
 
 use std::cell::{Cell, RefCell};
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{
     Box as GtkBox, Button, Label, ListBox, ListBoxRow, Orientation, Revealer,
     RevealerTransitionType, Scale,
 };
+use tr::tr;
 
 use super::components::SliderRow;
 use super::ui_helpers::{
@@ -168,7 +168,7 @@ pub fn build_mic_details() -> MicDetailsWidgets {
     container.add_css_class(qs::AUDIO_DETAILS);
 
     // Section header
-    let header = Label::new(Some(&gettext("Input Devices")));
+    let header = Label::new(Some(&tr!("Input Devices")));
     header.set_xalign(0.0);
     header.add_css_class(qs::SECTION_HEADER);
     container.append(&header);
@@ -189,8 +189,8 @@ pub fn build_mic_details() -> MicDetailsWidgets {
 
 /// Create a hint label for when mic control is unavailable.
 pub fn build_mic_hint_label() -> Label {
-    let label = Label::new(Some(&gettext(
-        "Microphone unavailable. Check your audio settings.",
+    let label = Label::new(Some(&tr!(
+        "Microphone unavailable. Check your audio settings."
     )));
     label.set_xalign(0.0);
     label.set_wrap(true);
@@ -208,7 +208,7 @@ fn populate_mic_source_list(list_box: &ListBox, sources: &[SourceInfoSnapshot]) 
     clear_list_box(list_box);
 
     if sources.is_empty() {
-        add_placeholder_row(list_box, &gettext("No input devices"));
+        add_placeholder_row(list_box, &tr!("No input devices"));
         return;
     }
 
@@ -220,7 +220,7 @@ fn populate_mic_source_list(list_box: &ListBox, sources: &[SourceInfoSnapshot]) 
 
     // If all sources are unavailable, show a message
     if available_count == 0 {
-        add_placeholder_row(list_box, &gettext("No input devices available"));
+        add_placeholder_row(list_box, &tr!("No input devices available"));
         return;
     }
 

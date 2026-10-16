@@ -9,13 +9,13 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use gettextrs::{gettext};
 use gtk4::pango::EllipsizeMode;
 use gtk4::prelude::*;
 use gtk4::{
     Align, Box as GtkBox, Button, CenterBox, EventControllerScroll, EventControllerScrollFlags,
     Image, Label, ListBox, ListBoxRow, Orientation, Revealer, RevealerTransitionType, Scale,
 };
+use tr::tr;
 
 use super::components::SliderRow;
 use super::ui_helpers::{
@@ -224,7 +224,7 @@ pub fn build_audio_details() -> AudioDetailsWidgets {
     container.add_css_class(qs::AUDIO_DETAILS);
 
     // Section header
-    let header = Label::new(Some(&gettext("Output Devices")));
+    let header = Label::new(Some(&tr!("Output Devices")));
     header.set_xalign(0.0);
     header.add_css_class(qs::SECTION_HEADER);
     container.append(&header);
@@ -233,7 +233,7 @@ pub fn build_audio_details() -> AudioDetailsWidgets {
     let list_box = create_qs_list_box();
     container.append(&list_box);
 
-    let app_header = Label::new(Some(&gettext("Applications")));
+    let app_header = Label::new(Some(&tr!("Applications")));
     app_header.set_xalign(0.0);
     app_header.add_css_class(qs::SECTION_HEADER);
     container.append(&app_header);
@@ -258,8 +258,8 @@ pub fn build_audio_details() -> AudioDetailsWidgets {
 
 /// Create a hint label for when audio control is unavailable.
 pub fn build_audio_hint_label() -> Label {
-    let label = Label::new(Some(&gettext(
-        "Audio sink suspended. Play audio to enable volume control.",
+    let label = Label::new(Some(&tr!(
+        "Audio sink suspended. Play audio to enable volume control."
     )));
     label.set_xalign(0.0);
     label.set_wrap(true);
@@ -277,12 +277,12 @@ fn populate_audio_sink_list(list_box: &ListBox, snapshot: &AudioSnapshot) {
     clear_list_box(list_box);
 
     if !snapshot.available {
-        add_placeholder_row(list_box, &gettext("Audio unavailable"));
+        add_placeholder_row(list_box, &tr!("Audio unavailable"));
         return;
     }
 
     if snapshot.sinks.is_empty() {
-        add_placeholder_row(list_box, &gettext("No audio devices"));
+        add_placeholder_row(list_box, &tr!("No audio devices"));
         return;
     }
 
@@ -295,7 +295,7 @@ fn populate_audio_sink_list(list_box: &ListBox, snapshot: &AudioSnapshot) {
 
     // If all sinks are unavailable, show a message
     if available_count == 0 {
-        add_placeholder_row(list_box, &gettext("No audio devices available"));
+        add_placeholder_row(list_box, &tr!("No audio devices available"));
         return;
     }
 
@@ -353,12 +353,12 @@ fn populate_app_volume_list(state: &AudioCardState, list_box: &ListBox, snapshot
     *state.app_volume_list_key.borrow_mut() = Some(app_volume_list_key(snapshot));
 
     if !snapshot.available {
-        add_placeholder_row(list_box, &gettext("Audio unavailable"));
+        add_placeholder_row(list_box, &tr!("Audio unavailable"));
         return;
     }
 
     if snapshot.app_volumes.is_empty() {
-        add_placeholder_row(list_box, &gettext("No application audio"));
+        add_placeholder_row(list_box, &tr!("No application audio"));
         return;
     }
 
@@ -522,9 +522,9 @@ impl AppVolumeRowState {
             icon.remove_css_class(state::MUTED);
         }
         let mute_tooltip = if stream.muted {
-            gettext("Unmute")
+            tr!("Unmute")
         } else {
-            gettext("Mute")
+            tr!("Mute")
         };
         if self.mute_button.tooltip_text().as_deref() != Some(mute_tooltip.as_str()) {
             self.mute_button.set_tooltip_text(Some(&mute_tooltip));

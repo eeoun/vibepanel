@@ -10,9 +10,9 @@ use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
 use std::rc::{Rc, Weak};
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Box as GtkBox, Entry, Label, ListBox, ListBoxRow, Orientation, ScrolledWindow};
+use tr::tr;
 use tracing::debug;
 
 use super::components::ListRow;
@@ -328,12 +328,12 @@ pub fn populate_vpn_list(state: &Rc<VpnCardState>, list_box: &ListBox, snapshot:
     clear_list_box(list_box);
 
     if !snapshot.is_ready {
-        add_placeholder_row(list_box, &gettext("Loading VPN state..."));
+        add_placeholder_row(list_box, &tr!("Loading VPN state..."));
         return;
     }
 
     if snapshot.connections.is_empty() {
-        add_placeholder_row(list_box, &gettext("No VPN connections"));
+        add_placeholder_row(list_box, &tr!("No VPN connections"));
         return;
     }
 
@@ -345,7 +345,7 @@ pub fn populate_vpn_list(state: &Rc<VpnCardState>, list_box: &ListBox, snapshot:
         // Build extra parts (Autoconnect, VPN type)
         let mut extra_parts: Vec<String> = Vec::new();
         if conn.autoconnect {
-            extra_parts.push(gettext("Autoconnect"));
+            extra_parts.push(tr!("Autoconnect"));
         }
         // Show VPN type
         if conn.vpn_type == "wireguard" {
@@ -373,11 +373,11 @@ pub fn populate_vpn_list(state: &Rc<VpnCardState>, list_box: &ListBox, snapshot:
         if conn.active {
             // Active: accent "Active" + muted extras
             let extra_refs: Vec<&str> = extra_parts.iter().map(String::as_str).collect();
-            let subtitle_widget = build_accent_subtitle(&gettext("Active"), &extra_refs);
+            let subtitle_widget = build_accent_subtitle(&tr!("vpn" => "Active"), &extra_refs);
             row_builder = row_builder.subtitle_widget(subtitle_widget.upcast());
         } else {
             // Inactive: plain muted subtitle
-            let mut parts = vec![gettext("Inactive")];
+            let mut parts = vec![tr!("Inactive")];
             parts.extend(extra_parts);
             let subtitle = parts.join(" \u{2022} ");
             row_builder = row_builder.subtitle(&subtitle);
@@ -428,9 +428,9 @@ fn create_vpn_action_widget(_state: &Rc<VpnCardState>, conn: &VpnConnection) -> 
 
     // Single action: "Disconnect" or "Connect" as accent-colored text
     let action_text = if is_active {
-        gettext("Disconnect")
+        tr!("Disconnect")
     } else {
-        gettext("Connect")
+        tr!("Connect")
     };
     let action_label = create_row_action_label(&action_text);
 
@@ -538,17 +538,17 @@ pub fn on_vpn_changed(state: &Rc<VpnCardState>, snapshot: &VpnSnapshot) -> bool 
     // Update VPN subtitle
     if let Some(label) = state.base.subtitle.borrow().as_ref() {
         let subtitle = if !snapshot.available {
-            gettext("Unavailable")
+            tr!("Unavailable")
         } else if !snapshot.is_ready {
-            gettext("VPN")
+            tr!("VPN")
         } else if let Some(p) = primary {
             if p.active {
                 p.name.clone()
             } else {
-                gettext("Disconnected")
+                tr!("Disconnected")
             }
         } else {
-            gettext("No connections")
+            tr!("No connections")
         };
         label.set_label(&subtitle);
         set_subtitle_active(label, snapshot.available && snapshot.any_active);
@@ -594,9 +594,9 @@ fn build_vpn_auth_box(state: &Rc<VpnCardState>) {
     status_label.set_hexpand(true);
     btn_row.append(&status_label);
 
-    let btn_cancel = crate::widgets::base::vp_button_with_label(&gettext("Cancel"));
+    let btn_cancel = crate::widgets::base::vp_button_with_label(&tr!("Cancel"));
     btn_cancel.add_css_class(button::CARD);
-    let btn_ok = crate::widgets::base::vp_button_with_label(&gettext("Connect"));
+    let btn_ok = crate::widgets::base::vp_button_with_label(&tr!("Connect"));
     btn_ok.add_css_class(button::ACCENT);
 
     // Apply Pango font attrs to fix text clipping on layer-shell surfaces
@@ -641,9 +641,9 @@ fn show_vpn_auth_dialog(state: &Rc<VpnCardState>, request: &VpnAuthRequest) {
             // Use description from auth-dialog (external-ui-mode)
             desc.clone()
         } else if request.is_retry {
-            gettext("Re-enter credentials for {name}").replacen("{name}", &request.name, 1)
+            tr!("Re-enter credentials for {name}", name = request.name)
         } else {
-            gettext("Enter credentials for {name}").replacen("{name}", &request.name, 1)
+            tr!("Enter credentials for {name}", name = request.name)
         };
         label.set_label(&text);
     }
@@ -652,7 +652,7 @@ fn show_vpn_auth_dialog(state: &Rc<VpnCardState>, request: &VpnAuthRequest) {
     if let Some(status_label) = state.auth_status_label.borrow().as_ref() {
         if request.is_retry {
             status_label.add_css_class(color::ERROR);
-            status_label.set_label(&gettext("Wrong password"));
+            status_label.set_label(&tr!("Wrong password"));
         } else {
             status_label.remove_css_class(color::ERROR);
             status_label.set_label("");

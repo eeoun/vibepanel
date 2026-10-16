@@ -3,6 +3,7 @@
 //! This is the main entry point for the vibepanel bar application.
 
 mod bar;
+mod i18n;
 pub mod layout_math;
 pub mod popover_registry;
 pub mod popover_tracker;
@@ -19,8 +20,6 @@ use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::rc::Rc;
-
-use gettextrs::{TextDomain};
 
 use clap::{Parser, Subcommand};
 use gtk4::Application;
@@ -225,19 +224,7 @@ enum NotificationsAction {
     Unread,
 }
 
-fn init_i18n() -> Result<(), Box<dyn std::error::Error>> {
-    unsafe {
-        TextDomain::new("vibepanel").init()?;
-    }
-    Ok(())
-}
-
 fn main() -> ExitCode {
-    if let Err(err) = init_i18n() {
-        eprintln!("Failed to initialize i18n: {err}");
-        return ExitCode::FAILURE;
-    }
-
     // Return memory used by large, short-lived image decodes to the OS instead
     // of keeping it for reuse. Keep glibc's matching trim setting so smaller
     // allocations remain efficient.
@@ -256,6 +243,10 @@ fn main() -> ExitCode {
     // fall back safely if unrelated config is broken.
     if let Some(command) = args.command.take() {
         return handle_command(command, args.config.as_deref());
+    }
+
+    if let Err(e) = i18n::init() {
+        warn!("Failed to set up translations, using English: {e}");
     }
 
     // Load configuration using XDG lookup chain

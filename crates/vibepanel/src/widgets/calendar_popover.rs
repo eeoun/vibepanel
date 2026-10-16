@@ -3,7 +3,6 @@ use std::rc::Rc;
 use std::sync::Once;
 
 use chrono::{Datelike, Local, NaiveDate, Timelike};
-use gettextrs::{gettext};
 use gtk4::cairo;
 use gtk4::gdk::RGBA;
 use gtk4::glib::markup_escape_text;
@@ -13,6 +12,7 @@ use gtk4::{
     Align, Box as GtkBox, Calendar, DrawingArea, Label, Orientation, Overlay, PolicyType,
     ScrolledWindow, SizeGroup, SizeGroupMode, Widget,
 };
+use tr::tr;
 
 use crate::services::calendar::{CalendarEvent, CalendarService, CalendarSnapshot};
 use crate::services::icons::IconsService;
@@ -103,7 +103,7 @@ pub fn build_clock_calendar_popover(
     today_button.add_css_class(surface::POPOVER_ICON_BTN);
     today_button.set_has_frame(false);
     today_button.set_focus_on_click(false);
-    today_button.set_tooltip_text(Some(&gettext("Go to today")));
+    today_button.set_tooltip_text(Some(&tr!("Go to today")));
 
     let next_button = crate::widgets::base::vp_button_from_icon_name("go-next-symbolic");
     next_button.add_css_class(surface::POPOVER_ICON_BTN);
@@ -455,9 +455,9 @@ fn rebuild_event_list(content: &GtkBox, date: NaiveDate, snapshot: &CalendarSnap
         .filter(|events| !events.is_empty())
     else {
         let state_text = if snapshot.loading {
-            gettext("Loading events...")
+            tr!("Loading events...")
         } else {
-            gettext("No events")
+            tr!("No events")
         };
         append_state_label(content, &state_text);
         return;
@@ -736,18 +736,17 @@ fn append_event_row(content: &GtkBox, event: &CalendarEvent, date: NaiveDate) {
 
 fn event_detail_text(event: &CalendarEvent, date: NaiveDate) -> String {
     let time = if event.all_day {
-        gettext("All day")
+        tr!("All day")
     } else if date == event.start.date_naive() {
         format!("{:02}:{:02}", event.start.hour(), event.start.minute())
     } else if date != event.final_day() {
-        gettext("Ongoing")
+        tr!("Ongoing")
     } else if event.end.time() == chrono::NaiveTime::MIN {
-        gettext("Until midnight")
+        tr!("Until midnight")
     } else {
-        gettext("Until {}").replacen(
-            "{}",
-            &format!("{:02}:{:02}", event.end.hour(), event.end.minute()),
-            1,
+        tr!(
+            "Until {time}",
+            time = format!("{:02}:{:02}", event.end.hour(), event.end.minute())
         )
     };
     match (&event.calendar_name, &event.location) {

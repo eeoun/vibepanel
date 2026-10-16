@@ -3,13 +3,13 @@
 //! This module contains constants and helper functions used by both
 //! notifications_toast.rs and notifications_popover.rs.
 
-use gettextrs::{gettext};
 use gtk4::gdk_pixbuf::Pixbuf;
 use gtk4::prelude::*;
 use gtk4::{
     Align, Box as GtkBox, Button, EventControllerMotion, Image, Label, Orientation, Overflow,
     Overlay, PolicyType, Revealer, RevealerTransitionType, ScrolledWindow, Widget, pango,
 };
+use tr::tr;
 
 use crate::services::battery::normalize_battery_icon_name;
 use crate::services::config_manager::ConfigManager;
@@ -220,7 +220,7 @@ pub fn create_notification_body(
     preview.set_valign(Align::Start);
     root.append(&body_overlay);
 
-    let expand_button = crate::widgets::base::vp_button_with_label(&gettext("Show more"));
+    let expand_button = crate::widgets::base::vp_button_with_label(&tr!("Show more"));
     expand_button.add_css_class(notif::ACTION_BTN);
     expand_button.add_css_class(button::GHOST);
     expand_button.set_visible(structural_overflow);
@@ -362,9 +362,9 @@ pub fn create_notification_body(
             crate::widgets::layer_shell_popover::animate_reveal(&height_revealer, false);
         }
         btn.set_label(&if expanded_now {
-            gettext("Show less")
+            tr!("Show less")
         } else {
-            gettext("Show more")
+            tr!("Show more")
         });
     });
 
@@ -392,16 +392,16 @@ pub fn format_timestamp(timestamp: f64) -> String {
     let diff = now - timestamp;
 
     if diff < 60.0 {
-        gettext("Just now")
+        tr!("Just now")
     } else if diff < 3600.0 {
         let mins = (diff / 60.0) as i32;
-        gettext("{}m ago").replacen("{}", &mins.to_string(), 1)
+        tr!("{minutes}m ago", minutes = mins)
     } else if diff < 86400.0 {
         let hours = (diff / 3600.0) as i32;
-        gettext("{}h ago").replacen("{}", &hours.to_string(), 1)
+        tr!("{hours}h ago", hours)
     } else {
         let days = (diff / 86400.0) as i32;
-        gettext("{}d ago").replacen("{}", &days.to_string(), 1)
+        tr!("{days}d ago", days)
     }
 }
 

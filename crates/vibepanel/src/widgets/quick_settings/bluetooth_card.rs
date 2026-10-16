@@ -10,11 +10,11 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{
     Box as GtkBox, Entry, Label, ListBox, ListBoxRow, Orientation, Popover, ScrolledWindow,
 };
+use tr::tr;
 use tracing::debug;
 
 use super::components::ListRow;
@@ -196,7 +196,7 @@ pub fn populate_bluetooth_list(
     }
 
     if !snapshot.has_adapter {
-        add_placeholder_row(list_box, &gettext("Bluetooth unavailable"));
+        add_placeholder_row(list_box, &tr!("Bluetooth unavailable"));
         return;
     }
 
@@ -204,18 +204,18 @@ pub fn populate_bluetooth_list(
         add_disabled_placeholder(
             list_box,
             "bluetooth-disabled-symbolic",
-            &gettext("Bluetooth is disabled"),
+            &tr!("Bluetooth is disabled"),
         );
         return;
     }
 
     if !snapshot.is_ready {
-        add_placeholder_row(list_box, &gettext("Scanning for devices..."));
+        add_placeholder_row(list_box, &tr!("Scanning for devices..."));
         return;
     }
 
     if snapshot.devices.is_empty() {
-        add_placeholder_row(list_box, &gettext("No Bluetooth devices"));
+        add_placeholder_row(list_box, &tr!("No Bluetooth devices"));
         return;
     }
 
@@ -236,7 +236,7 @@ pub fn populate_bluetooth_list(
         } else if !dev.address.is_empty() {
             dev.address.clone()
         } else {
-            gettext("Unknown device")
+            tr!("Unknown device")
         };
 
         let icon_name = dev.icon.as_deref().unwrap_or(if dev.connected {
@@ -262,23 +262,23 @@ pub fn populate_bluetooth_list(
 
         if is_pairing {
             // Pairing in progress: show "Pairing..." subtitle
-            row_builder = row_builder.subtitle(&gettext("Pairing..."));
+            row_builder = row_builder.subtitle(&tr!("Pairing..."));
         } else if dev.connected {
             // Connected: accent "Connected" + optional "Paired"
-            let paired_label = gettext("Paired");
+            let paired_label = tr!("Paired");
             let extra_parts: Vec<&str> = if dev.paired {
                 vec![paired_label.as_str()]
             } else {
                 vec![]
             };
-            let subtitle_widget = build_accent_subtitle(&gettext("Connected"), &extra_parts);
+            let subtitle_widget = build_accent_subtitle(&tr!("Connected"), &extra_parts);
             row_builder = row_builder.subtitle_widget(subtitle_widget.upcast());
         } else if dev.paired {
             // Paired only: plain muted subtitle
-            row_builder = row_builder.subtitle(&gettext("Paired"));
+            row_builder = row_builder.subtitle(&tr!("Paired"));
         } else if dev.trusted {
             // Trusted only (known device): plain muted subtitle
-            row_builder = row_builder.subtitle(&gettext("Saved"));
+            row_builder = row_builder.subtitle(&tr!("Saved"));
         }
         // Neither connected, paired, nor trusted: no subtitle
 
@@ -338,7 +338,7 @@ fn create_bluetooth_action_widget(dev: &BluetoothDevice, is_pairing: bool) -> gt
 
     // Unpaired/untrusted devices: single "Pair" label (same style as Wi-Fi "Connect")
     if !paired && !trusted {
-        let label = create_row_action_label(&gettext("Pair"));
+        let label = create_row_action_label(&tr!("Pair"));
         let path_clone = path.clone();
         label.connect_clicked(move |_| {
             let bt = BluetoothService::global();
@@ -378,7 +378,7 @@ fn create_bluetooth_action_widget(dev: &BluetoothDevice, is_pairing: bool) -> gt
         if connected {
             let path = path_for_menu.clone();
             let popover_weak = popover.downgrade();
-            let action = create_row_menu_action(&gettext("Disconnect"), move || {
+            let action = create_row_menu_action(&tr!("Disconnect"), move || {
                 if let Some(popover) = popover_weak.upgrade() {
                     close_row_menu_popover(&popover);
                 }
@@ -390,7 +390,7 @@ fn create_bluetooth_action_widget(dev: &BluetoothDevice, is_pairing: bool) -> gt
         } else {
             let path = path_for_menu.clone();
             let popover_weak = popover.downgrade();
-            let action = create_row_menu_action(&gettext("Connect"), move || {
+            let action = create_row_menu_action(&tr!("Connect"), move || {
                 if let Some(popover) = popover_weak.upgrade() {
                     close_row_menu_popover(&popover);
                 }
@@ -403,7 +403,7 @@ fn create_bluetooth_action_widget(dev: &BluetoothDevice, is_pairing: bool) -> gt
 
         let path = path_for_menu.clone();
         let popover_weak = popover.downgrade();
-        let action = create_row_menu_action(&gettext("Forget"), move || {
+        let action = create_row_menu_action(&tr!("Forget"), move || {
             if let Some(popover) = popover_weak.upgrade() {
                 close_row_menu_popover(&popover);
             }
@@ -448,19 +448,19 @@ fn build_auth_row(auth_request: &BluetoothAuthRequest, state: &BluetoothCardStat
     // Label
     let label_text = match auth_request {
         BluetoothAuthRequest::RequestPinCode { .. } => {
-            gettext("Enter PIN for {device}").replacen("{device}", device_name, 1)
+            tr!("Enter PIN for {device}", device = device_name)
         }
         BluetoothAuthRequest::RequestPasskey { .. } => {
-            gettext("Enter passkey for {device}").replacen("{device}", device_name, 1)
+            tr!("Enter passkey for {device}", device = device_name)
         }
         BluetoothAuthRequest::RequestConfirmation { .. } => {
-            gettext("Confirm the code matches on {device}").replacen("{device}", device_name, 1)
+            tr!("Confirm the code matches on {device}", device = device_name)
         }
         BluetoothAuthRequest::DisplayPinCode { .. } => {
-            gettext("Enter the code on {device}").replacen("{device}", device_name, 1)
+            tr!("Enter the code on {device}", device = device_name)
         }
         BluetoothAuthRequest::DisplayPasskey { .. } => {
-            gettext("Enter the code on {device}").replacen("{device}", device_name, 1)
+            tr!("Enter the code on {device}", device = device_name)
         }
     };
     let auth_label = Label::new(Some(&label_text));
@@ -484,7 +484,7 @@ fn build_auth_row(auth_request: &BluetoothAuthRequest, state: &BluetoothCardStat
     btn_spacer.set_hexpand(true);
     btn_row.append(&btn_spacer);
 
-    let btn_cancel = crate::widgets::base::vp_button_with_label(&gettext("Cancel"));
+    let btn_cancel = crate::widgets::base::vp_button_with_label(&tr!("Cancel"));
     btn_cancel.add_css_class(button::CARD);
     btn_cancel.connect_clicked(|_| {
         debug!("Auth cancelled by user");
@@ -498,9 +498,9 @@ fn build_auth_row(auth_request: &BluetoothAuthRequest, state: &BluetoothCardStat
     );
 
     let btn_confirm = crate::widgets::base::vp_button_with_label(&if is_confirmation {
-        gettext("Confirm")
+        tr!("Confirm")
     } else {
-        gettext("Pair")
+        tr!("Pair")
     });
     btn_confirm.add_css_class(button::ACCENT);
 
@@ -799,9 +799,9 @@ pub fn on_bluetooth_changed(state: &BluetoothCardState, snapshot: &BluetoothSnap
     // Update Bluetooth subtitle
     if let Some(label) = state.base.subtitle.borrow().as_ref() {
         let subtitle = if !snapshot.has_adapter {
-            gettext("Unavailable")
+            tr!("Unavailable")
         } else if !snapshot.is_ready {
-            gettext("Bluetooth")
+            tr!("Bluetooth")
         } else if snapshot.connected_devices > 0 {
             if snapshot.connected_devices == 1 {
                 snapshot
@@ -809,18 +809,14 @@ pub fn on_bluetooth_changed(state: &BluetoothCardState, snapshot: &BluetoothSnap
                     .iter()
                     .find(|d| d.connected)
                     .map(|d| d.name.clone())
-                    .unwrap_or_else(|| gettext("Bluetooth"))
+                    .unwrap_or_else(|| tr!("Bluetooth"))
             } else {
-                gettext("{count} connected").replacen(
-                    "{count}",
-                    &snapshot.connected_devices.to_string(),
-                    1,
-                )
+                tr!("{count} connected", count = snapshot.connected_devices)
             }
         } else if snapshot.powered {
-            gettext("Enabled")
+            tr!("Enabled")
         } else {
-            gettext("Disabled")
+            tr!("Disabled")
         };
         label.set_label(&subtitle);
         set_subtitle_active(label, snapshot.connected_devices > 0);

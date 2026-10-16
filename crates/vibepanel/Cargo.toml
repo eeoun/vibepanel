@@ -42,6 +42,7 @@ minreq = { workspace = true }
 material-colors = { workspace = true }
 image = { workspace = true }
 qrcode = { workspace = true }
+tr = { workspace = true }
 gettext-rs = { workspace = true }
 
 [dev-dependencies]

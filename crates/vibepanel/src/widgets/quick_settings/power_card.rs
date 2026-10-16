@@ -15,7 +15,6 @@ use std::process::{Command, Stdio};
 use std::rc::Rc;
 use std::time::Duration;
 
-use gettextrs::{gettext};
 use gtk4::gdk::BUTTON_PRIMARY;
 use gtk4::glib::{self, SourceId};
 use gtk4::prelude::*;
@@ -23,6 +22,7 @@ use gtk4::{
     Align, Box as GtkBox, Button, EventControllerKey, GestureClick, Label, ListBox, ListBoxRow,
     Orientation, Overlay, Popover, Revealer, RevealerTransitionType,
 };
+use tr::tr;
 use tracing::{debug, warn};
 
 use crate::services::compositor::CompositorManager;
@@ -46,8 +46,6 @@ pub const USE_POPOVER_VARIANT: bool = false;
 struct PowerAction {
     /// Unique identifier for the action.
     id: &'static str,
-    /// Display label for the action.
-    label: &'static str,
     /// Icon name (GTK/Material mapped).
     icon: &'static str,
 }
@@ -56,30 +54,39 @@ struct PowerAction {
 const POWER_ACTIONS: &[PowerAction] = &[
     PowerAction {
         id: "shutdown",
-        label: "Shut Down",
         icon: "system-shutdown-symbolic",
     },
     PowerAction {
         id: "reboot",
-        label: "Reboot",
         icon: "system-reboot-symbolic",
     },
     PowerAction {
         id: "suspend",
-        label: "Suspend",
         icon: "system-suspend-symbolic",
     },
     PowerAction {
         id: "lock",
-        label: "Lock",
         icon: "system-lock-screen-symbolic",
     },
     PowerAction {
         id: "logout",
-        label: "Log Out",
         icon: "system-log-out-symbolic",
     },
 ];
+
+impl PowerAction {
+    /// Translated display label.
+    fn label(&self) -> String {
+        match self.id {
+            "shutdown" => tr!("Shut Down"),
+            "reboot" => tr!("Reboot"),
+            "suspend" => tr!("Suspend"),
+            "lock" => tr!("Lock"),
+            "logout" => tr!("Log Out"),
+            other => other.to_string(),
+        }
+    }
+}
 
 fn command_for_action<'a>(action: &PowerAction, commands: &'a PowerCommandsConfig) -> &'a str {
     match action.id {
@@ -501,8 +508,8 @@ pub fn build_power_card_popover(
     // Create hold button card
     let (overlay, progress, button, icon_handle, subtitle) = create_hold_button_card(
         "system-shutdown-symbolic",
-        &gettext("Power"),
-        &gettext("Hold to open"),
+        &tr!("Power"),
+        &tr!("Hold to open"),
     );
 
     // Store references
@@ -584,7 +591,7 @@ fn create_power_popover_action(action: &'static PowerAction, command: String) ->
     hbox.append(&icon.widget());
 
     // Label
-    let label = Label::new(Some(&gettext(action.label)));
+    let label = Label::new(Some(&action.label()));
     label.set_xalign(0.0);
     label.set_hexpand(true);
     label.add_css_class(color::PRIMARY);
@@ -624,8 +631,8 @@ pub fn build_power_card_expander(
     // Build the card using ToggleCard pattern
     let card = ToggleCard::builder()
         .icon("system-shutdown-symbolic")
-        .label(&gettext("Power"))
-        .subtitle(&gettext("Hold to shut down"))
+        .label(&tr!("Power"))
+        .subtitle(&tr!("Hold to shut down"))
         .active(false)
         .sensitive(true)
         .icon_active(false)
@@ -756,7 +763,7 @@ fn build_power_action_row_with_command(
     hbox.append(&icon.widget());
 
     // Title using CardLabel for consistency
-    let label_result = CardLabel::new(&gettext(action.label))
+    let label_result = CardLabel::new(&action.label())
         .width_chars(22)
         .title_class(row::QS_TITLE)
         .build();

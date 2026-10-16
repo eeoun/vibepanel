@@ -1,7 +1,6 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
-use gettextrs::{gettext};
 use gtk4::gdk::{self, Monitor};
 use gtk4::glib;
 use gtk4::prelude::*;
@@ -10,6 +9,7 @@ use gtk4::{
 };
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use qrcode::{Color as QrColor, QrCode};
+use tr::tr;
 
 use crate::services::background_effect::attach_blur_surface_lifecycle;
 use crate::services::config_manager::{ConfigManager, ThemeCallbackGuard};
@@ -41,7 +41,7 @@ impl WifiQrWindow {
     pub fn new(app: &Application) -> Rc<Self> {
         let window = ApplicationWindow::builder()
             .application(app)
-            .title(gettext("Share Wi-Fi"))
+            .title(tr!("Share Wi-Fi"))
             .decorated(false)
             .resizable(false)
             .build();
@@ -60,7 +60,7 @@ impl WifiQrWindow {
         card.set_size_request(400, -1);
 
         let header = GtkBox::new(Orientation::Horizontal, 8);
-        let title = Label::new(Some(&gettext("Share Wi-Fi")));
+        let title = Label::new(Some(&tr!("Share Wi-Fi")));
         title.add_css_class(surface::POPOVER_TITLE);
         title.add_css_class(color::PRIMARY);
         title.set_hexpand(true);
@@ -71,7 +71,7 @@ impl WifiQrWindow {
         let close = Button::new();
         close.add_css_class(surface::POPOVER_ICON_BTN);
         close.set_has_frame(false);
-        close.set_tooltip_text(Some(&gettext("Close")));
+        close.set_tooltip_text(Some(&tr!("Close")));
         close.set_valign(Align::Start);
         close.set_child(Some(&Image::from_icon_name("window-close-symbolic")));
         header.append(&close);
@@ -228,7 +228,7 @@ impl WifiQrWindow {
 
     fn show_loading(&self) {
         clear_content(&self.body, &self.password_controls);
-        let label = Label::new(Some(&gettext("Loading Wi-Fi credentials...")));
+        let label = Label::new(Some(&tr!("Loading Wi-Fi credentials...")));
         label.add_css_class(color::MUTED);
         self.body.append(&label);
         SurfaceStyleManager::global().apply_pango_attrs_all(&self.body);
@@ -256,9 +256,7 @@ impl WifiQrWindow {
                 picture.set_corner_radius(radius as f32);
                 picture.set_margin_bottom(42);
                 picture.set_paintable(Some(&texture));
-                picture.set_tooltip_text(Some(
-                    &gettext("QR code for Wi-Fi network {ssid}").replacen("{ssid}", &ssid, 1),
-                ));
+                picture.set_tooltip_text(Some(&tr!("QR code for Wi-Fi network {ssid}", ssid)));
                 self.body.append(&picture);
 
                 if let Some(password) = password {
@@ -280,7 +278,7 @@ impl WifiQrWindow {
     fn add_password_toggle(&self, password: String) {
         self.password_controls.set_visible(true);
 
-        let reveal = Button::with_label(&gettext("Show password"));
+        let reveal = Button::with_label(&tr!("Show password"));
         reveal.add_css_class(button::LINK);
         reveal.set_halign(Align::Center);
         self.password_controls.append(&reveal);
@@ -293,10 +291,10 @@ impl WifiQrWindow {
         reveal.connect_clicked(move |button| {
             if revealed.get() {
                 password_label.set_label(" ");
-                button.set_label(&gettext("Show password"));
+                button.set_label(&tr!("Show password"));
             } else {
                 password_label.set_label(&password);
-                button.set_label(&gettext("Hide password"));
+                button.set_label(&tr!("Hide password"));
             }
             password_label.set_selectable(!revealed.get());
             revealed.set(!revealed.get());

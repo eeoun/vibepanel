@@ -1,6 +1,6 @@
 //! Shared formatting for GPU metrics displayed by widgets.
 
-use gettextrs::{gettext};
+use tr::tr;
 
 use crate::services::gpu::GpuDeviceSnapshot;
 use crate::services::system::format_bytes_long;
@@ -21,7 +21,7 @@ pub(crate) fn vram(snapshot: &GpuDeviceSnapshot) -> Option<String> {
             format_bytes_long(used),
             format_bytes_long(total)
         )),
-        (Some(used), None) => Some(gettext("{} used").replacen("{}", &format_bytes_long(used), 1)),
+        (Some(used), None) => Some(tr!("{used} used", used = format_bytes_long(used))),
         _ => None,
     }
 }

@@ -10,9 +10,9 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, CenterBox, Image, Label, Orientation};
+use tr::tr;
 use tracing::{debug, trace};
 use vibepanel_core::config::WidgetEntry;
 
@@ -673,16 +673,16 @@ fn update_tooltip(
         } else {
             &snapshot.app_id
         };
-        lines.push(gettext("App: {}").replacen("{}", app_label, 1));
+        lines.push(tr!("App: {app_label}", app_label));
     }
     if !snapshot.app_id.is_empty() {
-        lines.push(gettext("ID: {}").replacen("{}", &snapshot.app_id, 1));
+        lines.push(tr!("ID: {app_id}", app_id = snapshot.app_id));
     }
     if !snapshot.title.is_empty() {
-        lines.push(gettext("Title: {}").replacen("{}", &snapshot.title, 1));
+        lines.push(tr!("Title: {title}", title = snapshot.title));
     }
     if let Some(output) = &snapshot.output {
-        lines.push(gettext("Output: {}").replacen("{}", output, 1));
+        lines.push(tr!("Output: {output}", output));
     }
 
     let tooltip_text = if lines.is_empty() {

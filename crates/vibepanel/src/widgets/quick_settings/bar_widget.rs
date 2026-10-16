@@ -4,11 +4,11 @@
 //! Renders status icons (audio, bluetooth, network, VPN) and toggles
 //! the keep-alive QS window on click.
 
-use gettextrs::{gettext};
 use gtk4::gdk::BUTTON_PRIMARY;
 use gtk4::prelude::*;
 use gtk4::{Box as GtkBox, GestureClick};
 use std::rc::Rc;
+use tr::tr;
 use tracing::{debug, warn};
 
 use super::QuickSettingsWindowHandle;
@@ -266,7 +266,7 @@ impl QuickSettingsWidget {
                         widget.add_css_class(state::SERVICE_UNAVAILABLE);
                         audio_icon_handle.set_icon("audio-volume-muted-symbolic");
                         TooltipManager::global()
-                            .set_styled_tooltip(&widget, &gettext("Audio: Service unavailable"));
+                            .set_styled_tooltip(&widget, &tr!("Audio: Service unavailable"));
                         return;
                     }
 
@@ -275,7 +275,7 @@ impl QuickSettingsWidget {
                         widget.add_css_class(state::SERVICE_UNAVAILABLE);
                         audio_icon_handle.set_icon("audio-volume-muted-symbolic");
                         TooltipManager::global()
-                            .set_styled_tooltip(&widget, &gettext("Volume control unavailable"));
+                            .set_styled_tooltip(&widget, &tr!("Volume control unavailable"));
                         return;
                     }
 
@@ -285,9 +285,9 @@ impl QuickSettingsWidget {
                     audio_icon_handle.set_icon(icon_name);
 
                     let tooltip = if snapshot.muted {
-                        gettext("Muted")
+                        tr!("Muted")
                     } else {
-                        gettext("Volume: {}%").replacen("{}", &snapshot.volume.to_string(), 1)
+                        tr!("Volume: {volume}%", volume = snapshot.volume)
                     };
                     TooltipManager::global().set_styled_tooltip(&widget, &tooltip);
                 },
@@ -326,7 +326,7 @@ impl QuickSettingsWidget {
                         widget.remove_css_class(state::ICON_ACTIVE);
                         bt_icon_handle.set_icon("bluetooth-disabled-symbolic");
                         TooltipManager::global()
-                            .set_styled_tooltip(&widget, &gettext("Bluetooth: No adapter found"));
+                            .set_styled_tooltip(&widget, &tr!("Bluetooth: No adapter found"));
                         return;
                     }
 
@@ -359,13 +359,13 @@ impl QuickSettingsWidget {
                             .map(|d| d.name.clone())
                             .collect();
                         if lines.is_empty() {
-                            lines.push(gettext("Bluetooth On"));
+                            lines.push(tr!("Bluetooth On"));
                         }
                         lines.join("\n")
                     } else if powered {
-                        gettext("Bluetooth On")
+                        tr!("Bluetooth On")
                     } else {
-                        gettext("Bluetooth Off")
+                        tr!("Bluetooth Off")
                     };
                     TooltipManager::global().set_styled_tooltip(&widget, &tooltip);
                 },
@@ -408,7 +408,7 @@ impl QuickSettingsWidget {
                         wifi_icon_handle.set_spinning(false);
                         wifi_icon_handle.set_icon("network-wireless-offline-symbolic");
                         TooltipManager::global()
-                            .set_styled_tooltip(&widget, &gettext("Wi-Fi: Service unavailable"));
+                            .set_styled_tooltip(&widget, &tr!("Wi-Fi: Service unavailable"));
                         return;
                     }
                     widget.remove_css_class(state::SERVICE_UNAVAILABLE);
@@ -436,28 +436,26 @@ impl QuickSettingsWidget {
                     }
 
                     let tooltip = if snapshot.wired_connected() {
-                        gettext("Ethernet connected")
+                        tr!("Ethernet connected")
                     } else if snapshot.connected() {
-                        let connected_label = gettext("Connected");
+                        let connected_label = tr!("Connected");
                         let ssid = snapshot.active_ssid().unwrap_or(&connected_label);
                         let strength = snapshot.active_strength();
                         if strength > 0 {
-                            let text = gettext("{}\nSignal: {}%");
-                            text.replacen("{}", ssid, 1)
-                                .replacen("{}", &strength.to_string(), 1)
+                            tr!("{ssid}\nSignal: {strength}%", ssid, strength)
                         } else {
                             ssid.to_string()
                         }
                     } else if let Some(ssid) = snapshot.connecting_ssid() {
-                        gettext("Connecting to {}").replacen("{}", ssid, 1)
+                        tr!("Connecting to {ssid}", ssid)
                     } else if snapshot.wifi_device_connecting() {
-                        gettext("Connecting...")
+                        tr!("Connecting...")
                     } else if snapshot.wifi_enabled() == Some(false) {
-                        gettext("Wi-Fi Off")
+                        tr!("Wi-Fi Off")
                     } else if snapshot.scanning() {
-                        gettext("Wi-Fi: Scanning...")
+                        tr!("Wi-Fi: Scanning...")
                     } else {
-                        gettext("Disconnected")
+                        tr!("Disconnected")
                     };
                     TooltipManager::global().set_styled_tooltip(&widget, &tooltip);
                 },
@@ -519,24 +517,24 @@ impl QuickSettingsWidget {
 
                     let carrier = snapshot.mobile_display_name().to_string();
                     let tooltip = if !mobile_enabled {
-                        gettext("{}\nOff").replacen("{}", &carrier, 1)
+                        tr!("{carrier}\nOff", carrier)
                     } else if snapshot.mobile_connecting() {
-                        gettext("{}\nConnecting...").replacen("{}", &carrier, 1)
+                        tr!("{carrier}\nConnecting...", carrier)
                     } else if snapshot.mobile_failed() {
-                        gettext("{}\nConnection failed").replacen("{}", &carrier, 1)
+                        tr!("{carrier}\nConnection failed", carrier)
                     } else if snapshot.mobile_active() {
                         if let Some(tech) = snapshot.mobile_access_technology() {
-                            gettext("{}\nSignal: {}%\n{}")
-                                .replacen("{}", &carrier, 1)
-                                .replacen("{}", &quality.to_string(), 1)
-                                .replacen("{}", tech, 1)
+                            tr!(
+                                "{carrier}\nSignal: {quality}%\n{tech}",
+                                carrier,
+                                quality,
+                                tech
+                            )
                         } else {
-                            gettext("{}\nSignal: {}%")
-                                .replacen("{}", &carrier, 1)
-                                .replacen("{}", &quality.to_string(), 1)
+                            tr!("{carrier}\nSignal: {quality}%", carrier, quality)
                         }
                     } else {
-                        gettext("{}\nDisconnected").replacen("{}", &carrier, 1)
+                        tr!("{carrier}\nDisconnected", carrier)
                     };
                     TooltipManager::global().set_styled_tooltip(&widget, &tooltip);
                 },
@@ -584,12 +582,12 @@ impl QuickSettingsWidget {
                         .map(|c| c.name.clone())
                         .collect();
                     if active_names.is_empty() {
-                        gettext("VPN Connected")
+                        tr!("VPN Connected")
                     } else {
                         active_names.join("\n")
                     }
                 } else {
-                    gettext("VPN Disconnected")
+                    tr!("VPN Disconnected")
                 };
                 TooltipManager::global().set_styled_tooltip(&widget, &tooltip);
             }));

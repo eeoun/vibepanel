@@ -17,6 +17,7 @@ use std::path::Path;
 use std::process::Command;
 use std::rc::Rc;
 use std::time::SystemTime;
+use tr::tr;
 
 use gtk4::glib::{self, SourceId};
 use tracing::{debug, info, warn};
@@ -379,7 +380,7 @@ fn run_update_check(pm: PackageManager, report_status: &dyn Fn(String)) -> Check
 
     // Append flatpak updates when a different primary manager is detected
     if pm != PackageManager::Flatpak && has_flatpak() {
-        report_status("Checking flatpak...".to_string());
+        report_status(tr!("Checking {source}...", source = "flatpak"));
         if let Err(e) = append_flatpak_updates(&mut result.updates_by_repo) {
             debug!("Flatpak update check failed (ignored): {}", e);
         }
@@ -400,7 +401,7 @@ fn run_update_check(pm: PackageManager, report_status: &dyn Fn(String)) -> Check
 /// higher-priority repos (like COPRs) are already installed.
 fn check_dnf_updates(report_status: &dyn Fn(String)) -> CheckResult {
     // Phase 1: Refresh repo metadata (this is the slow, network-bound part)
-    report_status("Refreshing dnf cache...".to_string());
+    report_status(tr!("Refreshing dnf cache..."));
     match Command::new("dnf")
         .args(["makecache", "--refresh"])
         .output()
@@ -422,7 +423,7 @@ fn check_dnf_updates(report_status: &dyn Fn(String)) -> CheckResult {
     }
 
     // Phase 2: Check for available upgrades against fresh cache
-    report_status("Checking for upgrades...".to_string());
+    report_status(tr!("Checking for upgrades..."));
     let output = Command::new("dnf").args(["upgrade", "--assumeno"]).output();
 
     match output {
@@ -510,7 +511,7 @@ fn parse_dnf_upgrade_output(output: &str) -> HashMap<String, Vec<UpdateInfo>> {
 
 /// Check for updates using pacman (Arch official repos).
 fn check_pacman_updates(report_status: &dyn Fn(String)) -> CheckResult {
-    report_status("Checking pacman...".to_string());
+    report_status(tr!("Checking {source}...", source = "pacman"));
 
     // Try checkupdates first (from pacman-contrib), fall back to pacman -Qu
     let output = Command::new("checkupdates").output();
@@ -552,7 +553,7 @@ fn check_paru_updates(report_status: &dyn Fn(String)) -> CheckResult {
     let mut by_repo: HashMap<String, Vec<UpdateInfo>> = HashMap::new();
 
     // Check official repos with checkupdates
-    report_status("Checking official repos...".to_string());
+    report_status(tr!("Checking official repos..."));
     let official_output = Command::new("checkupdates").output();
 
     match official_output {
@@ -591,7 +592,7 @@ fn check_paru_updates(report_status: &dyn Fn(String)) -> CheckResult {
     }
 
     // Check AUR with paru -Qua
-    report_status("Checking AUR...".to_string());
+    report_status(tr!("Checking {source}...", source = "AUR"));
     let aur_output = Command::new("paru").args(["-Qua"]).output();
 
     match aur_output {
@@ -624,7 +625,7 @@ fn check_paru_updates(report_status: &dyn Fn(String)) -> CheckResult {
 
 /// Check for updates using Flatpak.
 fn check_flatpak_updates(report_status: &dyn Fn(String)) -> CheckResult {
-    report_status("Checking flatpak...".to_string());
+    report_status(tr!("Checking {source}...", source = "flatpak"));
 
     let mut by_repo = HashMap::new();
     match append_flatpak_updates(&mut by_repo) {

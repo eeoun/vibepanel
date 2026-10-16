@@ -4,6 +4,7 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, SystemTime};
+use tr::tr;
 
 use gtk4::glib::{self, SourceId};
 use gtk4::{gio, prelude::*};
@@ -258,6 +259,13 @@ impl WeatherService {
             .filter(|cached| cached_matches_config(cached, &config))
             .map(|cached| {
                 let mut snapshot = cached.snapshot;
+                // Condition text is cached in the language it was fetched in.
+                if let Some(current) = snapshot.current.as_mut() {
+                    current.condition = condition_for_code(current.weather_code);
+                }
+                for day in &mut snapshot.daily {
+                    day.condition = condition_for_code(day.weather_code);
+                }
                 if let Some(location) = snapshot.location.as_mut() {
                     apply_configured_location_label(location, &config);
                 }
@@ -1039,7 +1047,7 @@ fn parse_current(response: &OpenMeteoResponse) -> Result<CurrentWeather, String>
         feels_like: current.apparent_temperature,
         humidity: current.relative_humidity_2m.and_then(to_u8),
         wind_speed: current.wind_speed_10m,
-        condition: condition_for_code(weather_code).to_string(),
+        condition: condition_for_code(weather_code),
         weather_code,
         is_day: current.is_day.map(|v| v == 1),
     })
@@ -1058,7 +1066,7 @@ fn parse_daily(response: &OpenMeteoResponse) -> Vec<DailyForecast> {
             let weather_code = at(&daily.weather_code, i);
             DailyForecast {
                 date: date.clone(),
-                condition: condition_for_code(weather_code).to_string(),
+                condition: condition_for_code(weather_code),
                 weather_code,
                 temperature_min: at(&daily.temperature_2m_min, i),
                 temperature_max: at(&daily.temperature_2m_max, i),
@@ -1082,18 +1090,18 @@ fn to_u8(value: i64) -> Option<u8> {
     u8::try_from(value).ok()
 }
 
-fn condition_for_code(code: Option<i32>) -> &'static str {
-    // Widgets should prefer weather_code for icons/i18n and treat this as fallback text.
+fn condition_for_code(code: Option<i32>) -> String {
+    // Translated at parse time; cached snapshots are re-translated on restore.
     match code {
-        Some(0) => "Clear",
-        Some(1 | 2) => "Partly cloudy",
-        Some(3) => "Cloudy",
-        Some(45 | 48) => "Fog",
-        Some(51 | 53 | 55 | 56 | 57) => "Drizzle",
-        Some(61 | 63 | 65 | 66 | 67 | 80 | 81 | 82) => "Rain",
-        Some(71 | 73 | 75 | 77 | 85 | 86) => "Snow",
-        Some(95 | 96 | 99) => "Thunderstorm",
-        _ => "Unknown",
+        Some(0) => tr!("weather" => "Clear"),
+        Some(1 | 2) => tr!("weather" => "Partly cloudy"),
+        Some(3) => tr!("weather" => "Cloudy"),
+        Some(45 | 48) => tr!("weather" => "Fog"),
+        Some(51 | 53 | 55 | 56 | 57) => tr!("weather" => "Drizzle"),
+        Some(61 | 63 | 65 | 66 | 67 | 80 | 81 | 82) => tr!("weather" => "Rain"),
+        Some(71 | 73 | 75 | 77 | 85 | 86) => tr!("weather" => "Snow"),
+        Some(95 | 96 | 99) => tr!("weather" => "Thunderstorm"),
+        _ => tr!("weather" => "Unknown"),
     }
 }
 

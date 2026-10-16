@@ -5,10 +5,10 @@
 //! the popover opens, so it always reflects current data.
 
 use chrono::NaiveDate;
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, Label, Orientation, SizeGroup, Widget};
 use std::rc::Rc;
+use tr::tr;
 
 use crate::services::icons::IconsService;
 use crate::services::weather::{CurrentWeather, DailyForecast, WeatherService, WeatherSnapshot};
@@ -116,10 +116,9 @@ fn build_hero(snapshot: &WeatherSnapshot, current: &CurrentWeather) -> GtkBox {
     text_column.append(&condition);
 
     if let Some(feels_like) = current.feels_like {
-        let detail = build_hero_detail_label(&gettext("Feels like {}").replacen(
-            "{}",
-            &format_temperature(feels_like, snapshot.units, false),
-            1,
+        let detail = build_hero_detail_label(&tr!(
+            "Feels like {temperature}",
+            temperature = format_temperature(feels_like, snapshot.units, false)
         ));
         text_column.append(&detail);
     }
@@ -197,18 +196,18 @@ fn build_metrics(snapshot: &WeatherSnapshot, current: &CurrentWeather) -> GtkBox
     // Two vertical columns keep each column's icon/text origin aligned while the
     // whole metrics block stays right-aligned in the hero card.
     metrics.append(&build_metric_column([
-        build_metric("weather-humidity", &gettext("Humidity"), &humidity),
-        build_metric("weather-wind", &gettext("Wind"), &wind),
+        build_metric("weather-humidity", &tr!("Humidity"), &humidity),
+        build_metric("weather-wind", &tr!("Wind"), &wind),
         build_metric(
             "weather-precipitation",
-            &gettext("Precipitation"),
+            &tr!("Precipitation"),
             &precipitation,
         ),
     ]));
     metrics.append(&build_metric_column([
-        build_metric("weather-sunrise", &gettext("Sunrise"), &sunrise),
-        build_metric("weather-sunset", &gettext("Sunset"), &sunset),
-        build_metric("weather-uv-index", &gettext("UV Index"), &uv_index),
+        build_metric("weather-sunrise", &tr!("Sunrise"), &sunrise),
+        build_metric("weather-sunset", &tr!("Sunset"), &sunset),
+        build_metric("weather-uv-index", &tr!("UV Index"), &uv_index),
     ]));
 
     metrics
@@ -352,7 +351,7 @@ fn forecast_metric_width(wind: &str, precipitation: &str) -> i32 {
 
 fn build_status_banner(snapshot: &WeatherSnapshot) -> Option<GtkBox> {
     let text = if let Some(error) = &snapshot.error {
-        gettext("Error: {error}").replacen("{error}", error, 1)
+        tr!("Error: {error}", error)
     } else {
         return None;
     };
@@ -380,9 +379,9 @@ fn build_empty_state(snapshot: &WeatherSnapshot) -> GtkBox {
     let text = if let Some(error) = &snapshot.error {
         error.clone()
     } else if snapshot.loading {
-        gettext("Loading weather…")
+        tr!("Loading weather…")
     } else {
-        gettext("No weather data available")
+        tr!("No weather data available")
     };
 
     let label = Label::new(Some(&text));
@@ -451,7 +450,7 @@ fn icon_for_forecast(forecast: &DailyForecast) -> &'static str {
 /// weather location's timezone; later dates render as short weekday names.
 fn day_name(index: usize, date: &str) -> String {
     if index == 0 {
-        return gettext("Today");
+        return tr!("Today");
     }
 
     NaiveDate::parse_from_str(date, "%Y-%m-%d")

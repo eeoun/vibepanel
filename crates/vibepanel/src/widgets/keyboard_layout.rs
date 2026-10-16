@@ -2,9 +2,9 @@
 //!
 //! Shows a short code or full name with optional icon. Click to cycle layouts.
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{GestureClick, Label};
+use tr::tr;
 use tracing::debug;
 use vibepanel_core::config::WidgetEntry;
 
@@ -105,7 +105,7 @@ impl KeyboardLayoutWidget {
     pub fn new(config: KeyboardLayoutConfig) -> Self {
         let base = BaseWidget::new(&[widget::KEYBOARD_LAYOUT]);
 
-        base.set_tooltip(&gettext("Keyboard layout"));
+        base.set_tooltip(&tr!("Keyboard layout"));
 
         let icon_handle = base.add_icon("input-keyboard", &[widget::KEYBOARD_LAYOUT_ICON]);
         let label = base.add_label(None, &[widget::KEYBOARD_LAYOUT_LABEL, class::VCENTER_CAPS]);
@@ -242,9 +242,12 @@ fn update_keyboard_layout_widget(
 
     // Set tooltip to full layout name
     let tooltip = if info.layout_name.is_empty() {
-        gettext("Keyboard layout: unknown")
+        tr!("Keyboard layout: unknown")
     } else {
-        gettext("Keyboard layout: {}").replacen("{}", &info.layout_name, 1)
+        tr!(
+            "Keyboard layout: {layout_name}",
+            layout_name = info.layout_name
+        )
     };
     let tooltip_manager = TooltipManager::global();
     tooltip_manager.set_styled_tooltip(container, &tooltip);

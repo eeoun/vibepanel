@@ -3,9 +3,9 @@
 //! Usage comes from `SystemService`, which queries the path off the GTK thread.
 //! Opens the shared system popover, which lists every mounted drive.
 
-use gettextrs::{gettext};
 use gtk4::Label;
 use gtk4::prelude::*;
+use tr::tr;
 use vibepanel_core::config::WidgetEntry;
 use vibepanel_core::expand_tilde;
 
@@ -211,17 +211,15 @@ fn update_disk_widget(
         Some(Some(usage)) => usage,
         pending_or_failed => {
             let (text, status) = match pending_or_failed {
-                None => ("--", gettext("loading")),
-                _ => ("?", gettext("unavailable")),
+                None => ("--", tr!("loading")),
+                _ => ("?", tr!("unavailable")),
             };
             label.set_label(text);
             container.remove_css_class(widget::DISK_HIGH);
             icon_handle.remove_css_class(widget::DISK_HIGH);
             tooltips.set_styled_tooltip(
                 container,
-                &gettext("Disk {}: {status}")
-                    .replacen("{}", &config.path, 1)
-                    .replacen("{status}", &status, 1),
+                &tr!("Disk {path}: {status}", path = config.path, status),
             );
             return;
         }
@@ -243,12 +241,14 @@ fn update_disk_widget(
     label.set_label(&format_disk(usage, &config.format, is_vertical));
     tooltips.set_styled_tooltip(
         container,
-        &gettext("Disk {}: {:.1}%\n{} / {}\n{} free")
-            .replacen("{}", &config.path, 1)
-            .replacen("{:.1}", &format!("{:.1}", usage.percent()), 1)
-            .replacen("{}", &format_bytes_long(usage.used), 1)
-            .replacen("{}", &format_bytes_long(usage.total), 1)
-            .replacen("{}", &format_bytes_long(usage.available), 1),
+        &tr!(
+            "Disk {path}: {percent}%\n{used} / {total}\n{free} free",
+            path = config.path,
+            percent = format!("{:.1}", usage.percent()),
+            used = format_bytes_long(usage.used),
+            total = format_bytes_long(usage.total),
+            free = format_bytes_long(usage.available)
+        ),
     );
 }
 

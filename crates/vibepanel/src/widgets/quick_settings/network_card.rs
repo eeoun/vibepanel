@@ -11,13 +11,13 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::time::Duration;
 
-use gettextrs::{gettext};
 use gtk4::glib::{self, WeakRef};
 use gtk4::prelude::*;
 use gtk4::{
     ApplicationWindow, Box as GtkBox, Button, Entry, Label, ListBox, ListBoxRow, Orientation,
     Overlay, Popover, ScrolledWindow, Switch,
 };
+use tr::tr;
 use tracing::debug;
 
 use super::components::ListRow;
@@ -217,10 +217,28 @@ pub fn build_network_subtitle(snapshot: &NetworkSnapshot) -> NetworkSubtitleResu
     NetworkSubtitleResult { container, label }
 }
 
+/// Translate a connection failure reason reported by the network backend.
+fn failure_text(reason: &str) -> String {
+    match reason {
+        AUTH_FAILURE_REASON => tr!("Wrong password"),
+        CONNECTION_FAILURE_REASON => tr!("Connection failed"),
+        // Reasons reported by the IWD backend.
+        "Network not found" => tr!("Network not found"),
+        "Not supported" => tr!("Not supported"),
+        "Not configured" => tr!("Not configured"),
+        "Permission denied" => tr!("Permission denied"),
+        "Not connected" => tr!("Not connected"),
+        "Authentication timed out" => tr!("Authentication timed out"),
+        "Network out of range" => tr!("Network out of range"),
+        "Enterprise WiFi not supported" => tr!("Enterprise WiFi not supported"),
+        other => other.to_string(),
+    }
+}
+
 /// Generate the subtitle text for the network card based on connection state.
 pub fn get_network_subtitle_text(snapshot: &NetworkSnapshot) -> String {
     if !snapshot.available() {
-        return gettext("Unavailable");
+        return tr!("Unavailable");
     }
 
     let wifi_enabled = snapshot.wifi_enabled().unwrap_or(false);
@@ -231,10 +249,10 @@ pub fn get_network_subtitle_text(snapshot: &NetworkSnapshot) -> String {
 
     // Wired connected — may also have wifi and/or cellular
     if snapshot.wired_connected() {
-        let mut parts = vec![gettext("Ethernet")];
+        let mut parts = vec![tr!("Ethernet")];
         if is_connecting {
             if let Some(ssid) = snapshot.active_ssid() {
-                parts.push(gettext("Connecting to {}").replacen("{}", ssid, 1));
+                parts.push(tr!("Connecting to {ssid}", ssid));
             }
         } else if let Some(ssid) = snapshot.active_ssid() {
             parts.push(ssid.to_string());
@@ -249,14 +267,10 @@ pub fn get_network_subtitle_text(snapshot: &NetworkSnapshot) -> String {
     if mobile_active {
         if is_connecting {
             if let Some(ssid) = snapshot.active_ssid() {
-                return gettext("{} \u{2022} Connecting to {}")
-                    .replacen("{}", carrier, 1)
-                    .replacen("{}", ssid, 1);
+                return tr!("{carrier} • Connecting to {ssid}", carrier, ssid);
             }
         } else if let Some(ssid) = snapshot.active_ssid() {
-            return gettext("{} \u{2022} {}")
-                .replacen("{}", ssid, 1)
-                .replacen("{}", carrier, 1);
+            return format!("{ssid} \u{2022} {carrier}");
         }
         return carrier.to_string();
     }
@@ -264,9 +278,9 @@ pub fn get_network_subtitle_text(snapshot: &NetworkSnapshot) -> String {
     // Wi-Fi only (no wired, no cellular active)
     if is_connecting {
         return if let Some(ssid) = snapshot.active_ssid() {
-            gettext("Connecting to {}").replacen("{}", ssid, 1)
+            tr!("Connecting to {ssid}", ssid)
         } else {
-            gettext("Connecting...")
+            tr!("Connecting...")
         };
     }
 
@@ -276,14 +290,14 @@ pub fn get_network_subtitle_text(snapshot: &NetworkSnapshot) -> String {
 
     // Mobile connecting (not yet active)
     if mobile_connecting {
-        return gettext("{} \u{2022} Connecting...").replacen("{}", carrier, 1);
+        return tr!("{carrier} • Connecting...", carrier);
     }
 
     // Fallback disconnected/off states
     if !snapshot.has_wifi_device() || wifi_enabled {
-        gettext("Disconnected")
+        tr!("Disconnected")
     } else {
-        gettext("Off")
+        tr!("Off")
     }
 }
 
@@ -495,7 +509,7 @@ pub fn build_wifi_details(
     wifi_switch_row.set_baseline_position(gtk4::BaselinePosition::Center);
 
     // Wi-Fi label (only visible when a non-WiFi device is present)
-    let wifi_label = Label::new(Some(&gettext("Wi-Fi")));
+    let wifi_label = Label::new(Some(&tr!("Wi-Fi")));
     wifi_label.add_css_class(color::PRIMARY);
     wifi_label.add_css_class(qs::NETWORK_SECTION_LABEL);
     wifi_label.set_valign(gtk4::Align::Center);
@@ -577,9 +591,9 @@ pub fn build_wifi_details(
     pwd_status_label.set_hexpand(true);
     btn_row.append(&pwd_status_label);
 
-    let btn_cancel = crate::widgets::base::vp_button_with_label(&gettext("Cancel"));
+    let btn_cancel = crate::widgets::base::vp_button_with_label(&tr!("Cancel"));
     btn_cancel.add_css_class(button::CARD);
-    let btn_ok = crate::widgets::base::vp_button_with_label(&gettext("Connect"));
+    let btn_ok = crate::widgets::base::vp_button_with_label(&tr!("Connect"));
     btn_ok.add_css_class(button::ACCENT);
 
     // Apply Pango font attrs to fix text clipping on layer-shell surfaces
@@ -646,7 +660,7 @@ fn build_ethernet_row(snapshot: &NetworkSnapshot) -> EthernetRowWidgets {
     let header_row = GtkBox::new(Orientation::Horizontal, 8);
     header_row.add_css_class(qs::NETWORK_SECTION_ROW);
 
-    let header_label = Label::new(Some(&gettext("Ethernet")));
+    let header_label = Label::new(Some(&tr!("Ethernet")));
     header_label.add_css_class(color::PRIMARY);
     header_label.add_css_class(qs::NETWORK_SECTION_LABEL);
     header_label.set_valign(gtk4::Align::Center);
@@ -661,7 +675,7 @@ fn build_ethernet_row(snapshot: &NetworkSnapshot) -> EthernetRowWidgets {
     );
 
     // Get connection name for title, fallback to interface name, then generic
-    let generic_title = gettext("Wired Connection");
+    let generic_title = tr!("Wired Connection");
     let title = snapshot
         .wired_name()
         .or(snapshot.wired_iface())
@@ -712,17 +726,17 @@ fn build_ethernet_subtitle(snapshot: &NetworkSnapshot) -> GtkBox {
         if speed >= 1000 {
             let gbps = speed as f64 / 1000.0;
             if gbps.fract() == 0.0 {
-                extra_parts.push(gettext("{} Gbps").replacen("{}", &(speed / 1000).to_string(), 1));
+                extra_parts.push(format!("{} Gbps", speed / 1000));
             } else {
-                extra_parts.push(gettext("{} Gbps").replacen("{}", &format!("{:.1}", gbps), 1));
+                extra_parts.push(format!("{gbps:.1} Gbps"));
             }
         } else {
-            extra_parts.push(gettext("{} Mbps").replacen("{}", &speed.to_string(), 1));
+            extra_parts.push(format!("{speed} Mbps"));
         }
     }
 
     let extra_refs: Vec<&str> = extra_parts.iter().map(|s| s.as_str()).collect();
-    build_accent_subtitle(&gettext("Connected"), &extra_refs)
+    build_accent_subtitle(&tr!("Connected"), &extra_refs)
 }
 
 /// Build a comparable key from the ethernet subtitle inputs (interface name + speed).
@@ -742,14 +756,14 @@ fn set_mobile_subtitle(widgets: &MobileRowWidgets, snapshot: &NetworkSnapshot) {
     let details_label = &widgets.details_label;
 
     if !mobile_enabled {
-        status_label.set_text(&gettext("Off"));
+        status_label.set_text(&tr!("Off"));
         status_label.remove_css_class(color::ERROR);
         status_label.add_css_class(color::MUTED);
         status_label.set_visible(true);
         accent_label.set_visible(false);
         details_label.set_visible(false);
     } else if snapshot.mobile_connecting() {
-        status_label.set_text(&gettext("Connecting..."));
+        status_label.set_text(&tr!("Connecting..."));
         status_label.set_visible(true);
         status_label.remove_css_class(color::ERROR);
         status_label.add_css_class(color::MUTED);
@@ -757,7 +771,7 @@ fn set_mobile_subtitle(widgets: &MobileRowWidgets, snapshot: &NetworkSnapshot) {
         details_label.set_visible(false);
     } else if snapshot.mobile_active() {
         status_label.set_visible(false);
-        accent_label.set_text(&gettext("Connected"));
+        accent_label.set_text(&tr!("Connected"));
         accent_label.set_visible(true);
 
         let signal = snapshot.mobile_signal_quality().unwrap_or(0);
@@ -778,14 +792,14 @@ fn set_mobile_subtitle(widgets: &MobileRowWidgets, snapshot: &NetworkSnapshot) {
             details_label.set_visible(true);
         }
     } else if snapshot.mobile_failed() {
-        status_label.set_text(CONNECTION_FAILURE_REASON);
+        status_label.set_text(&tr!("Connection failed"));
         status_label.remove_css_class(color::MUTED);
         status_label.add_css_class(color::ERROR);
         status_label.set_visible(true);
         accent_label.set_visible(false);
         details_label.set_visible(false);
     } else {
-        status_label.set_text(&gettext("Disconnected"));
+        status_label.set_text(&tr!("Disconnected"));
         status_label.remove_css_class(color::ERROR);
         status_label.add_css_class(color::MUTED);
         status_label.set_visible(true);
@@ -804,7 +818,7 @@ fn build_mobile_row(state: &Rc<NetworkCardState>, snapshot: &NetworkSnapshot) ->
     let header_row = GtkBox::new(Orientation::Horizontal, 8);
     header_row.add_css_class(qs::NETWORK_SECTION_ROW);
 
-    let header_label = Label::new(Some(&gettext("Mobile")));
+    let header_label = Label::new(Some(&tr!("Mobile")));
     header_label.add_css_class(color::PRIMARY);
     header_label.add_css_class(qs::NETWORK_SECTION_LABEL);
     header_label.set_valign(gtk4::Align::Center);
@@ -880,9 +894,9 @@ fn build_mobile_row(state: &Rc<NetworkCardState>, snapshot: &NetworkSnapshot) ->
     subtitle_box.append(&details_label);
 
     let action_button = create_row_action_label(&if mobile_active {
-        gettext("Disconnect")
+        tr!("Disconnect")
     } else {
-        gettext("Connect")
+        tr!("Connect")
     });
     action_button.set_sensitive(!snapshot.mobile_connecting() && mobile_enabled);
     action_button.connect_clicked(move |_| {
@@ -946,7 +960,7 @@ pub fn update_ethernet_row(state: &NetworkCardState, snapshot: &NetworkSnapshot)
     }
 
     // Update title
-    let generic_title = gettext("Wired Connection");
+    let generic_title = tr!("Wired Connection");
     let new_title = snapshot
         .wired_name()
         .or(snapshot.wired_iface())
@@ -1002,9 +1016,9 @@ pub fn update_mobile_row(state: &NetworkCardState, snapshot: &NetworkSnapshot) {
         .set_sensitive(snapshot.available() && snapshot.has_modem_device());
 
     w.action_button.set_label(&if snapshot.mobile_active() {
-        gettext("Disconnect")
+        tr!("Disconnect")
     } else {
-        gettext("Connect")
+        tr!("Connect")
     });
     w.action_button
         .set_sensitive(!snapshot.mobile_connecting() && enabled);
@@ -1066,14 +1080,14 @@ pub fn populate_wifi_list(
             add_disabled_placeholder(
                 list_box,
                 "network-wireless-offline-symbolic",
-                &gettext("Wi-Fi is disabled"),
+                &tr!("Wi-Fi is disabled"),
             );
         } else if !snapshot.wired_connected() && !snapshot.mobile_active() {
             // No Wi-Fi device and no Ethernet - show "No network connections"
             add_disabled_placeholder(
                 list_box,
                 "network-offline-symbolic",
-                &gettext("No network connections"),
+                &tr!("No network connections"),
             );
         }
         // If no Wi-Fi device but Ethernet is connected, nothing to show in Wi-Fi list
@@ -1081,7 +1095,7 @@ pub fn populate_wifi_list(
     }
 
     if snapshot.networks().is_empty() {
-        add_placeholder_row(list_box, &gettext("No networks found"));
+        add_placeholder_row(list_box, &tr!("No networks found"));
         return;
     }
 
@@ -1100,14 +1114,14 @@ pub fn populate_wifi_list(
         // Build subtitle parts (excluding "Connected" which gets special treatment)
         let mut extra_parts: Vec<String> = Vec::new();
         if is_connecting {
-            extra_parts.push(gettext("Connecting..."));
+            extra_parts.push(tr!("Connecting..."));
         }
         if net.security.is_secured() {
-            extra_parts.push(gettext("Secured"));
+            extra_parts.push(tr!("Secured"));
         }
         // "Connecting..." already says enough; "Saved" is noise until the attempt settles.
         if net.known && !is_connecting {
-            extra_parts.push(gettext("Saved"));
+            extra_parts.push(tr!("Saved"));
         }
         extra_parts.push(format!("{}%", net.strength));
 
@@ -1187,13 +1201,13 @@ pub fn populate_wifi_list(
         if net.active && !is_connecting {
             // Active network: accent "Connected" + muted extras
             let extra_refs: Vec<&str> = extra_parts.iter().map(|s| s.as_str()).collect();
-            let subtitle_widget = build_accent_subtitle(&gettext("Connected"), &extra_refs);
+            let subtitle_widget = build_accent_subtitle(&tr!("Connected"), &extra_refs);
             row_builder = row_builder.subtitle_widget(subtitle_widget.upcast());
         } else if is_failed {
             // Failed network: error-colored reason + muted extras
             let reason = failed_reason.unwrap_or(CONNECTION_FAILURE_REASON);
             let extra_refs: Vec<&str> = extra_parts.iter().map(|s| s.as_str()).collect();
-            let subtitle_widget = build_error_subtitle(reason, &extra_refs);
+            let subtitle_widget = build_error_subtitle(&failure_text(reason), &extra_refs);
             row_builder = row_builder.subtitle_widget(subtitle_widget.upcast());
         } else {
             // Not connected: plain subtitle
@@ -1272,7 +1286,7 @@ fn create_network_action_widget(net: &WifiNetwork, can_share: bool) -> gtk4::Wid
 
     if !has_multiple_actions {
         // Single action: just "Connect" as accent-colored text
-        let action_label = create_row_action_label(&gettext("Connect"));
+        let action_label = create_row_action_label(&tr!("Connect"));
         let ssid_clone = ssid.clone();
         let is_secured = net.security.is_secured();
         let path = net.path.clone();
@@ -1324,7 +1338,7 @@ fn create_network_action_widget(net: &WifiNetwork, can_share: bool) -> gtk4::Wid
         if is_active_clone {
             let ssid_clone = ssid_for_actions.clone();
             let popover_weak = popover.downgrade();
-            let action = create_row_menu_action(&gettext("Disconnect"), move || {
+            let action = create_row_menu_action(&tr!("Disconnect"), move || {
                 // Close popover first to avoid "still has children" warning
                 if let Some(p) = popover_weak.upgrade() {
                     close_row_menu_popover(&p);
@@ -1338,7 +1352,7 @@ fn create_network_action_widget(net: &WifiNetwork, can_share: bool) -> gtk4::Wid
             let ssid_clone = ssid_for_actions.clone();
             let path_clone = path_for_actions.clone();
             let popover_weak = popover.downgrade();
-            let action = create_row_menu_action(&gettext("Connect"), move || {
+            let action = create_row_menu_action(&tr!("Connect"), move || {
                 // Close popover first to avoid "still has children" warning
                 if let Some(p) = popover_weak.upgrade() {
                     close_row_menu_popover(&p);
@@ -1354,7 +1368,7 @@ fn create_network_action_widget(net: &WifiNetwork, can_share: bool) -> gtk4::Wid
         if can_share {
             let ssid = ssid_for_actions.clone();
             let popover_weak = popover.downgrade();
-            let action = create_row_menu_action(&gettext("Share"), move || {
+            let action = create_row_menu_action(&tr!("Share"), move || {
                 if let Some(popover) = popover_weak.upgrade() {
                     close_row_menu_popover(&popover);
                 }
@@ -1371,7 +1385,7 @@ fn create_network_action_widget(net: &WifiNetwork, can_share: bool) -> gtk4::Wid
             let ssid_clone = ssid_for_actions.clone();
             let path_clone = path_for_forget.clone();
             let popover_weak = popover.downgrade();
-            let action = create_row_menu_action(&gettext("Forget"), move || {
+            let action = create_row_menu_action(&tr!("Forget"), move || {
                 // Close popover first to avoid "still has children" warning
                 if let Some(p) = popover_weak.upgrade() {
                     close_row_menu_popover(&p);
@@ -1412,14 +1426,14 @@ pub fn show_password_dialog_with_error(
     *state.password_opened_ssid.borrow_mut() = snapshot.active_ssid().map(|s| s.to_string());
 
     if let Some(label) = state.password_label.borrow().as_ref() {
-        label.set_label(&gettext("Enter password for {}").replacen("{}", ssid, 1));
+        label.set_label(&tr!("Enter password for {ssid}", ssid));
     }
 
     // Show or clear the error label (always visible for layout, text controls display)
     if let Some(error_label) = state.password_error_label.borrow().as_ref() {
         if let Some(msg) = error_message {
             error_label.add_css_class(color::ERROR);
-            error_label.set_label(msg);
+            error_label.set_label(&failure_text(msg));
         } else {
             error_label.remove_css_class(color::ERROR);
             error_label.set_label("");
@@ -1595,7 +1609,7 @@ fn set_password_connecting_state(
         // Show status label with initial text (remove error styling)
         if let Some(label) = state.password_error_label.borrow().as_ref() {
             label.remove_css_class(color::ERROR);
-            label.set_label(&gettext("Connecting"));
+            label.set_label(&tr!("Connecting"));
         }
 
         if source_opt.is_none()
@@ -1618,7 +1632,7 @@ fn set_password_connecting_state(
                             3 => "...",
                             _ => "",
                         };
-                        label.set_label(&gettext("Connecting{}").replacen("{}", dots, 1));
+                        label.set_label(&format!("{}{dots}", tr!("Connecting")));
                         glib::ControlFlow::Continue
                     } else {
                         // Returning Break removes this source. Clear the stored ID
@@ -1701,7 +1715,7 @@ pub fn on_network_changed(
                     set_password_connecting_state(state, false, None);
                     if let Some(error_label) = state.password_error_label.borrow().as_ref() {
                         error_label.add_css_class(color::ERROR);
-                        error_label.set_label(CONNECTION_FAILURE_REASON);
+                        error_label.set_label(&tr!("Connection failed"));
                     }
                     // Repopulate the network list so the previously-connected network
                     // no longer shows "Connected" (the list is normally skipped when
@@ -1798,7 +1812,7 @@ pub fn on_network_changed(
                     set_password_connecting_state(state, false, None);
                     if let Some(error_label) = state.password_error_label.borrow().as_ref() {
                         error_label.add_css_class(color::ERROR);
-                        error_label.set_label(reason);
+                        error_label.set_label(&failure_text(reason));
                     }
                     // Repopulate the network list so the previously-connected network
                     // no longer shows "Connected" (the list is normally skipped when
@@ -1902,8 +1916,8 @@ pub fn on_network_changed(
 
     // Update card title based on whether ethernet/modem device exists
     if let Some(title_label) = state.title_label.borrow().as_ref() {
-        let network_title = gettext("Network");
-        let wifi_title = gettext("Wi-Fi");
+        let network_title = tr!("Network");
+        let wifi_title = tr!("Wi-Fi");
         let expected_title = if snapshot.has_non_wifi_device() {
             network_title.as_str()
         } else {

@@ -18,6 +18,19 @@ jobs:
       - uses: actions/checkout@v4
       - run: cargo fmt --check
 
+  translations:
+    runs-on: ubuntu-latest
+    name: Translations
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gettext
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo install xtr --version 0.1.11 --locked
+      - name: Check catalogs match the source and embedded .mo files are current
+        run: make -C crates/vibepanel/po check
+
   check:
     runs-on: ubuntu-latest
     container: ubuntu:26.04

@@ -3,7 +3,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use gettextrs::{gettext};
 use gtk4::gdk_pixbuf::Pixbuf;
 use gtk4::gio;
 use gtk4::glib;
@@ -11,6 +10,7 @@ use gtk4::prelude::*;
 use gtk4::{
     Align, Box as GtkBox, Button, EventControllerLegacy, Label, Orientation, Overlay, Scale,
 };
+use tr::tr;
 use tracing::{debug, warn};
 
 use crate::services::config_manager::ConfigManager;
@@ -343,7 +343,7 @@ pub fn build_media_controls(
     for class in extra_classes {
         prev_btn.add_css_class(class);
     }
-    prev_btn.set_tooltip_text(Some(&gettext("Previous")));
+    prev_btn.set_tooltip_text(Some(&tr!("Previous")));
     prev_btn.set_valign(Align::Center);
     prev_btn.connect_clicked(|_| MediaService::global().previous());
     container.append(&prev_btn);
@@ -361,7 +361,7 @@ pub fn build_media_controls(
     for class in extra_classes {
         play_pause_btn.add_css_class(class);
     }
-    play_pause_btn.set_tooltip_text(Some(&gettext("Play/Pause")));
+    play_pause_btn.set_tooltip_text(Some(&tr!("Play/Pause")));
     play_pause_btn.set_valign(Align::Center);
     play_pause_btn.connect_clicked(|_| MediaService::global().play_pause());
     container.append(&play_pause_btn);
@@ -377,7 +377,7 @@ pub fn build_media_controls(
     for class in extra_classes {
         next_btn.add_css_class(class);
     }
-    next_btn.set_tooltip_text(Some(&gettext("Next")));
+    next_btn.set_tooltip_text(Some(&tr!("Next")));
     next_btn.set_valign(Align::Center);
     next_btn.connect_clicked(|_| MediaService::global().next());
     container.append(&next_btn);
@@ -572,14 +572,14 @@ pub fn build_track_info(
     container.set_hexpand(true);
 
     let title_label = Rc::new(MarqueeLabel::new());
-    title_label.set_text(&gettext("No track playing"));
+    title_label.set_text(&tr!("No track playing"));
     title_label.set_max_width_chars(max_width_chars);
     title_label.label().add_css_class(media::TRACK_TITLE);
     title_label.widget().set_halign(Align::Center);
     title_label.widget().set_hexpand(true);
     container.append(title_label.widget());
 
-    let artist_label = Label::new(Some(&gettext("Unknown artist")));
+    let artist_label = Label::new(Some(&tr!("Unknown artist")));
     artist_label.add_css_class(media::ARTIST);
     artist_label.add_css_class(color::MUTED);
     artist_label.set_halign(Align::Center);
@@ -611,7 +611,7 @@ pub fn update_track_info(
     album_label: &Label,
     snapshot: &MediaSnapshot,
 ) {
-    let no_track_playing = gettext("No track playing");
+    let no_track_playing = tr!("No track playing");
     title_label.set_text(
         snapshot
             .metadata
@@ -620,7 +620,7 @@ pub fn update_track_info(
             .unwrap_or(&no_track_playing),
     );
 
-    let unknown_artist = gettext("Unknown artist");
+    let unknown_artist = tr!("Unknown artist");
     let artist = snapshot
         .metadata
         .artist

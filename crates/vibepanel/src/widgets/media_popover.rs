@@ -1,8 +1,8 @@
 //! Media popover - detailed media player controls and track information.
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, Button, Label, Orientation, Popover, Widget};
+use tr::tr;
 
 use crate::services::config_manager::ConfigManager;
 use crate::services::icons::IconsService;
@@ -81,7 +81,7 @@ where
     player_icon.widget().set_valign(Align::Center);
     player_btn.set_child(Some(&player_icon.widget()));
 
-    TooltipManager::global().set_styled_tooltip(&player_btn, &gettext("Select player"));
+    TooltipManager::global().set_styled_tooltip(&player_btn, &tr!("Select player"));
     player_btn.connect_clicked(|btn| {
         TooltipManager::global().cancel_and_hide();
         show_player_menu(btn);
@@ -101,7 +101,7 @@ where
     popout_icon.widget().set_valign(Align::Center);
     popout_btn.set_child(Some(&popout_icon.widget()));
 
-    TooltipManager::global().set_styled_tooltip(&popout_btn, &gettext("Pop out"));
+    TooltipManager::global().set_styled_tooltip(&popout_btn, &tr!("Pop out"));
     popout_btn.connect_clicked(move |_| on_popout());
     buttons_row.append(&popout_btn);
 
@@ -182,7 +182,7 @@ fn show_player_menu(parent: &Button) {
     content.set_margin_end(4);
 
     // Auto option - show current auto-selected player as subtitle
-    let auto_btn = create_player_menu_item(&gettext("Auto"), active_player_name, is_auto);
+    let auto_btn = create_player_menu_item(&tr!("Auto"), active_player_name, is_auto);
     auto_btn.connect_clicked({
         let popover = popover.clone();
         move |_| {
@@ -197,9 +197,9 @@ fn show_player_menu(parent: &Button) {
     for player in players {
         let is_selected = !is_auto && player.is_active;
         let status_text = match player.playback_status {
-            PlaybackStatus::Playing => Some(gettext("Playing")),
-            PlaybackStatus::Paused => Some(gettext("Paused")),
-            PlaybackStatus::Stopped => Some(gettext("Stopped")),
+            PlaybackStatus::Playing => Some(tr!("Playing")),
+            PlaybackStatus::Paused => Some(tr!("Paused")),
+            PlaybackStatus::Stopped => Some(tr!("Stopped")),
         };
 
         let btn = create_player_menu_item(&player.player_name, status_text.as_deref(), is_selected);

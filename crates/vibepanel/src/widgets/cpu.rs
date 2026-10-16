@@ -9,9 +9,9 @@
 //! - `TooltipManager` for styled tooltips
 //! - Shared popover with Memory/GPU widgets for detailed system info
 
-use gettextrs::{gettext};
 use gtk4::Label;
 use gtk4::prelude::*;
+use tr::tr;
 use vibepanel_core::config::WidgetEntry;
 
 use crate::services::callbacks::CallbackId;
@@ -148,7 +148,7 @@ impl CpuWidget {
 
     /// Shared construction for active and passive modes.
     fn build(config: CpuConfig, base: BaseWidget) -> Self {
-        base.set_tooltip(&gettext("CPU: unknown"));
+        base.set_tooltip(&tr!("CPU: unknown"));
 
         let icon_handle = base.add_icon("cpu-symbolic", &[widget::CPU_ICON]);
 
@@ -244,7 +244,7 @@ fn update_cpu_widget(
         }
 
         let tooltip_manager = TooltipManager::global();
-        tooltip_manager.set_styled_tooltip(container, &gettext("CPU: Service unavailable"));
+        tooltip_manager.set_styled_tooltip(container, &tr!("CPU: Service unavailable"));
         return;
     }
 
@@ -265,13 +265,17 @@ fn update_cpu_widget(
     }
 
     let tooltip = match snapshot.cpu_temp {
-        Some(temp) => gettext("CPU: {:.1}%\nTemp: {:.0}°C\nCores: {}")
-            .replacen("{:.1}", &format!("{:.1}", snapshot.cpu_usage), 1)
-            .replacen("{:.0}", &format!("{:.0}", temp), 1)
-            .replacen("{}", &snapshot.cpu_core_count.to_string(), 1),
-        None => gettext("CPU: {:.1}%\nCores: {}")
-            .replacen("{:.1}", &format!("{:.1}", snapshot.cpu_usage), 1)
-            .replacen("{}", &snapshot.cpu_core_count.to_string(), 1),
+        Some(temp) => tr!(
+            "CPU: {cpu_usage}%\nTemp: {temp}°C\nCores: {cpu_core_count}",
+            cpu_usage = format!("{:.1}", snapshot.cpu_usage),
+            temp = format!("{:.0}", temp),
+            cpu_core_count = snapshot.cpu_core_count
+        ),
+        None => tr!(
+            "CPU: {cpu_usage}%\nCores: {cpu_core_count}",
+            cpu_usage = format!("{:.1}", snapshot.cpu_usage),
+            cpu_core_count = snapshot.cpu_core_count
+        ),
     };
     let tooltip_manager = TooltipManager::global();
     tooltip_manager.set_styled_tooltip(container, &tooltip);

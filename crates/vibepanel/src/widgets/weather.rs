@@ -3,10 +3,10 @@
 //! The widget is a pure service subscriber. Top-level `[weather]` owns data
 //! configuration; `[widgets.weather]` only controls presentation.
 
-use gettextrs::{gettext};
 use gtk4::Label;
 use gtk4::prelude::*;
 use std::time::{Duration, SystemTime};
+use tr::tr;
 use vibepanel_core::config::{WeatherUnits, WeatherWindUnits, WidgetEntry};
 
 use crate::services::callbacks::CallbackId;
@@ -78,7 +78,7 @@ impl WeatherWidget {
     }
 
     fn build(config: WeatherConfig, base: BaseWidget, create_popover: bool) -> Self {
-        base.set_tooltip(&gettext("Weather: loading..."));
+        base.set_tooltip(&tr!("Weather: loading..."));
 
         let icon_handle = base.add_icon("weather-unknown", &[widget::WEATHER_ICON]);
         let label = base.add_label(None, &[widget::WEATHER_LABEL, class::VCENTER_CAPS]);
@@ -232,7 +232,7 @@ fn format_label(snapshot: &WeatherSnapshot, format: &str, is_vertical: bool) -> 
 
 fn format_tooltip(snapshot: &WeatherSnapshot) -> String {
     let mut lines = Vec::new();
-    let unknown_location = gettext("Unknown location");
+    let unknown_location = tr!("Unknown location");
     let location = snapshot
         .location
         .as_ref()
@@ -240,64 +240,53 @@ fn format_tooltip(snapshot: &WeatherSnapshot) -> String {
         .unwrap_or(&unknown_location);
 
     if let Some(current) = &snapshot.current {
-        lines.push(
-            gettext("Weather: {} · {}")
-                .replacen("{}", location, 1)
-                .replacen(
-                    "{}",
-                    &format_temperature(current.temperature, snapshot.units, false),
-                    1,
-                ),
-        );
-        lines.push(gettext("Condition: {}").replacen("{}", &current.condition, 1));
+        lines.push(tr!(
+            "Weather: {location} · {temperature}",
+            location,
+            temperature = format_temperature(current.temperature, snapshot.units, false)
+        ));
+        lines.push(tr!("Condition: {condition}", condition = current.condition));
         if let Some(feels_like) = current.feels_like {
-            lines.push(gettext("Feels like: {}").replacen(
-                "{}",
-                &format_temperature(feels_like, snapshot.units, false),
-                1,
+            lines.push(tr!(
+                "Feels like: {temperature}",
+                temperature = format_temperature(feels_like, snapshot.units, false)
             ));
         }
         if let Some(humidity) = current.humidity {
-            lines.push(gettext("Humidity: {humidity}%").replacen(
-                "{humidity}",
-                &humidity.to_string(),
-                1,
-            ));
+            lines.push(tr!("Humidity: {humidity}%", humidity));
         }
         if current.wind_speed.is_some() {
-            lines.push(gettext("Wind: {}").replacen(
-                "{}",
-                &format_wind(current.wind_speed, snapshot.wind_units),
-                1,
+            lines.push(tr!(
+                "Wind: {wind}",
+                wind = format_wind(current.wind_speed, snapshot.wind_units)
             ));
         }
         if let Some(is_day) = current.is_day {
-            let light = if is_day {
-                gettext("day")
-            } else {
-                gettext("night")
-            };
-            lines.push(gettext("Light: {}").replacen("{}", &light, 1));
+            let light = if is_day { tr!("day") } else { tr!("night") };
+            lines.push(tr!("Light: {light}", light));
         }
 
         if let Some(forecast) = snapshot.daily.first() {
             lines.push(format_daily_forecast(forecast, snapshot.units));
         }
     } else if snapshot.loading {
-        lines.push(gettext("Weather: loading..."));
+        lines.push(tr!("Weather: loading..."));
     } else {
-        lines.push(gettext("Weather: unavailable"));
+        lines.push(tr!("Weather: unavailable"));
     }
 
     if let Some(last_update) = snapshot.last_update {
-        lines.push(gettext("Updated: {}").replacen("{}", &format_last_update(last_update), 1));
+        lines.push(tr!(
+            "Updated: {last_update}",
+            last_update = format_last_update(last_update)
+        ));
     }
 
     if snapshot.stale {
-        lines.push(gettext("Data may be stale"));
+        lines.push(tr!("Data may be stale"));
     }
     if let Some(error) = &snapshot.error {
-        lines.push(gettext("Error: {error}").replacen("{error}", error, 1));
+        lines.push(tr!("Error: {error}", error));
     }
 
     lines.join("\n")
@@ -315,27 +304,35 @@ fn format_daily_forecast(
         .temperature_max
         .map(|value| format_temperature(value, units, false))
         .unwrap_or_else(|| "—".to_string());
-    let precip = forecast
-        .precipitation_probability
-        .map(|value| gettext(", rain {value}%").replacen("{value}", &value.to_string(), 1))
-        .unwrap_or_default();
-
-    gettext("Forecast {}: {}, {} / {}{}")
-        .replacen("{}", &forecast.date, 1)
-        .replacen("{}", &forecast.condition, 1)
-        .replacen("{}", &low, 1)
-        .replacen("{}", &high, 1)
-        .replacen("{}", &precip, 1)
+    let date = &forecast.date;
+    let condition = &forecast.condition;
+    match forecast.precipitation_probability {
+        Some(rain) => tr!(
+            "Forecast {date}: {condition}, {low} / {high}, rain {rain}%",
+            date,
+            condition,
+            low,
+            high,
+            rain
+        ),
+        None => tr!(
+            "Forecast {date}: {condition}, {low} / {high}",
+            date,
+            condition,
+            low,
+            high
+        ),
+    }
 }
 
 fn format_last_update(last_update: SystemTime) -> String {
     match SystemTime::now().duration_since(last_update) {
-        Ok(age) if age < Duration::from_secs(60) => gettext("just now"),
+        Ok(age) if age < Duration::from_secs(60) => tr!("just now"),
         Ok(age) if age < Duration::from_secs(60 * 60) => {
-            gettext("{}m ago").replacen("{}", &(age.as_secs() / 60).to_string(), 1)
+            tr!("{minutes}m ago", minutes = (age.as_secs() / 60))
         }
-        Ok(age) => gettext("{}h ago").replacen("{}", &(age.as_secs() / (60 * 60)).to_string(), 1),
-        Err(_) => gettext("just now"),
+        Ok(age) => tr!("{hours}h ago", hours = (age.as_secs() / (60 * 60))),
+        Err(_) => tr!("just now"),
     }
 }
 

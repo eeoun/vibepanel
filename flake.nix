@@ -50,12 +50,14 @@
         ];
 
         # Filter source to only include Rust-relevant files (improves caching)
-        # Also include .ttf (embedded font) files
+        # Also include .ttf (embedded font) and .mo (embedded translation) files
         src = pkgs.lib.cleanSourceWith {
           src = craneLib.path ./.;
           filter =
             path: type:
-            (craneLib.filterCargoSources path type) || (pkgs.lib.hasSuffix ".ttf" path);
+            (craneLib.filterCargoSources path type)
+            || (pkgs.lib.hasSuffix ".ttf" path)
+            || (pkgs.lib.hasSuffix ".mo" path);
         };
 
         commonArgs = {

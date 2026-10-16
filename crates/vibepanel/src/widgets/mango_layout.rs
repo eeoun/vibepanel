@@ -4,9 +4,9 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::{Rc, Weak};
 
-use gettextrs::{gettext};
 use gtk4::prelude::*;
 use gtk4::{Align, Box as GtkBox, Button, Grid, Label, Orientation};
+use tr::tr;
 use tracing::warn;
 use vibepanel_core::config::WidgetEntry;
 
@@ -103,7 +103,7 @@ pub struct MangoLayoutWidget {
 impl MangoLayoutWidget {
     pub fn new(config: MangoLayoutConfig, output_id: Option<String>) -> Self {
         let base = BaseWidget::new(&[widget::MANGO_LAYOUT]);
-        base.set_tooltip(&gettext("Mango layout: unknown"));
+        base.set_tooltip(&tr!("Mango layout: unknown"));
 
         let icon = material_icon("tile", widget::MANGO_LAYOUT_ICON);
         icon.root.set_visible(config.show_icon);
@@ -178,7 +178,7 @@ fn update_widget(
         label.set_label("OV");
         TooltipManager::global().set_styled_tooltip(
             container,
-            &gettext("Mango overview ({})").replacen("{}", &info.output, 1),
+            &tr!("Mango overview ({output})", output = info.output),
         );
         return;
     }
@@ -186,21 +186,23 @@ fn update_widget(
     let (symbol, tooltip) = match info {
         Some(info) => (
             info.symbol.as_str(),
-            gettext("Mango layout: {} ({})")
-                .replacen("{}", display_name(info), 1)
-                .replacen("{}", &info.output, 1),
+            tr!(
+                "Mango layout: {layout} ({output})",
+                layout = display_name(info),
+                output = info.output
+            ),
         ),
-        None => ("?", gettext("Mango layout: unavailable")),
+        None => ("?", tr!("Mango layout: unavailable")),
     };
     icon.set_layout(info.map(|info| info.layout_name.as_str()).unwrap_or("grid"));
     label.set_label(symbol);
     TooltipManager::global().set_styled_tooltip(container, &tooltip);
 }
 
-fn display_name(info: &WindowLayoutInfo) -> &str {
+fn display_name(info: &WindowLayoutInfo) -> String {
     mango_layouts::by_name(&info.layout_name)
-        .map(|layout| layout.label)
-        .unwrap_or(&info.layout_name)
+        .map(|layout| layout.label())
+        .unwrap_or_else(|| info.layout_name.clone())
 }
 
 struct MangoLayoutPopoverController {
@@ -244,7 +246,7 @@ fn build_popover(
 ) -> (GtkBox, MangoLayoutPopoverController) {
     let root = GtkBox::new(Orientation::Vertical, 12);
 
-    let title = Label::new(Some(&gettext("Window Layout")));
+    let title = Label::new(Some(&tr!("Window Layout")));
     title.add_css_class(surface::POPOVER_TITLE);
     title.set_halign(Align::Start);
     root.append(&title);
@@ -265,7 +267,7 @@ fn build_popover(
         content.set_halign(Align::Fill);
         let icon = material_icon(layout.name, widget::MANGO_LAYOUT_TILE_ICON);
         content.append(&icon.root);
-        let label = Label::new(Some(&gettext(layout.label)));
+        let label = Label::new(Some(&layout.label()));
         label.add_css_class(widget::MANGO_LAYOUT_TILE_LABEL);
         label.set_ellipsize(gtk4::pango::EllipsizeMode::End);
         content.append(&label);
@@ -293,7 +295,7 @@ fn build_popover(
 
 fn popover_title(info: Option<&WindowLayoutInfo>) -> String {
     let Some(info) = info else {
-        return gettext("Window Layout");
+        return tr!("Window Layout");
     };
 
     let tags = info
@@ -303,12 +305,14 @@ fn popover_title(info: Option<&WindowLayoutInfo>) -> String {
         .filter(|tag| *tag > 0)
         .collect::<Vec<_>>();
     match tags.as_slice() {
-        [tag] => gettext("Layout for tag {} on {}")
-            .replacen("{}", &tag.to_string(), 1)
-            .replacen("{}", &info.output, 1),
-        [] if is_overview(info) => gettext("Overview on {}").replacen("{}", &info.output, 1),
-        [] => gettext("Layout on {}").replacen("{}", &info.output, 1),
-        _ => gettext("Layout for current view on {}").replacen("{}", &info.output, 1),
+        [tag] => tr!(
+            "Layout for tag {tag} on {output}",
+            tag,
+            output = info.output
+        ),
+        [] if is_overview(info) => tr!("Overview on {output}", output = info.output),
+        [] => tr!("Layout on {output}", output = info.output),
+        _ => tr!("Layout for current view on {output}", output = info.output),
     }
 }
 

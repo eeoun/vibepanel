@@ -6,13 +6,13 @@
 //! - Click opens a popover with full playback controls
 //! - Pop-out button to open a standalone draggable window
 
-use gettextrs::{gettext};
 use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4::{Image, Overlay};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
+use tr::tr;
 use tracing::{debug, trace, warn};
 use vibepanel_core::config::WidgetEntry;
 
@@ -492,7 +492,7 @@ fn create_controls(_parent_widget: &gtk4::Box, is_vertical: bool) -> ControlsHan
     let prev_btn = create_media_control_button(
         &icons,
         "media-skip-backward",
-        &gettext("Previous"),
+        &tr!("Previous"),
         &[media::CONTROL_BTN, button::COMPACT],
         || MediaService::global().previous(),
     );
@@ -508,7 +508,7 @@ fn create_controls(_parent_widget: &gtk4::Box, is_vertical: bool) -> ControlsHan
     play_pause_btn.add_css_class(media::CONTROL_BTN);
     play_pause_btn.add_css_class(media::CONTROL_BTN_PRIMARY);
     play_pause_btn.add_css_class(button::COMPACT);
-    play_pause_btn.set_tooltip_text(Some(&gettext("Play/Pause")));
+    play_pause_btn.set_tooltip_text(Some(&tr!("Play/Pause")));
     play_pause_btn.connect_clicked(|_| {
         MediaService::global().play_pause();
     });
@@ -528,7 +528,7 @@ fn create_controls(_parent_widget: &gtk4::Box, is_vertical: bool) -> ControlsHan
     let next_btn = create_media_control_button(
         &icons,
         "media-skip-forward",
-        &gettext("Next"),
+        &tr!("Next"),
         &[media::CONTROL_BTN, button::COMPACT],
         || MediaService::global().next(),
     );
@@ -548,7 +548,7 @@ fn create_controls(_parent_widget: &gtk4::Box, is_vertical: bool) -> ControlsHan
 impl MediaWidget {
     pub fn new(config: MediaConfig) -> Self {
         let base = BaseWidget::new(&[media::WIDGET]);
-        base.set_tooltip(&gettext("No media playing"));
+        base.set_tooltip(&tr!("No media playing"));
 
         let is_vertical = ConfigManager::global().bar_position().is_vertical();
         let template_elements = template_elements_for_orientation(&config.template, is_vertical);
@@ -1016,7 +1016,7 @@ fn perform_hide(
         container.add_css_class(media::STOPPED);
 
         let tooltip_manager = TooltipManager::global();
-        tooltip_manager.set_styled_tooltip(container, &gettext("No media playing"));
+        tooltip_manager.set_styled_tooltip(container, &tr!("No media playing"));
     }
 }
 
@@ -1274,34 +1274,34 @@ fn show_player_icon_in_art(
 
 fn build_tooltip(snapshot: &MediaSnapshot) -> String {
     if !snapshot.available {
-        return gettext("No media playing");
+        return tr!("No media playing");
     }
 
     let mut lines = Vec::new();
 
     if let Some(name) = &snapshot.player_name {
-        lines.push(gettext("Player: {}").replacen("{}", name, 1));
+        lines.push(tr!("Player: {name}", name));
     }
 
     if let Some(title) = &snapshot.metadata.title {
-        lines.push(gettext("Title: {}").replacen("{}", title, 1));
+        lines.push(tr!("Title: {title}", title));
     }
     if let Some(artist) = &snapshot.metadata.artist {
-        lines.push(gettext("Artist: {}").replacen("{}", artist, 1));
+        lines.push(tr!("Artist: {artist}", artist));
     }
     if let Some(album) = &snapshot.metadata.album {
-        lines.push(gettext("Album: {}").replacen("{}", album, 1));
+        lines.push(tr!("Album: {album}", album));
     }
 
     let status = match snapshot.playback_status {
-        PlaybackStatus::Playing => gettext("Playing"),
-        PlaybackStatus::Paused => gettext("Paused"),
-        PlaybackStatus::Stopped => gettext("Stopped"),
+        PlaybackStatus::Playing => tr!("Playing"),
+        PlaybackStatus::Paused => tr!("Paused"),
+        PlaybackStatus::Stopped => tr!("Stopped"),
     };
-    lines.push(gettext("Status: {}").replacen("{}", &status, 1));
+    lines.push(tr!("Status: {status}", status));
 
     if lines.is_empty() {
-        gettext("Media")
+        tr!("Media")
     } else {
         lines.join("\n")
     }
