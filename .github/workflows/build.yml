@@ -1,0 +1,74 @@
+
+name: Build
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: ubuntu
+            container: ubuntu:latest
+            package-manager: apt
+            artifact: vibepanel-ubuntu-x86_64
+
+          - distro: fedora
+            container: fedora:latest
+            package-manager: dnf
+            artifact: vibepanel-fedora-x86_64
+
+    container:
+      image: ${{ matrix.container }}
+
+    steps:
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          if [ "${{ matrix.package-manager }}" = "apt" ]; then
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              build-essential rustc cargo \
+              libgtk-4-dev libgtk4-layer-shell-dev \
+              libpulse-dev pkg-config git ca-certificates libudev-dev 
+          else
+            dnf install -y \
+              gcc gcc-c++ make rust cargo \
+              gtk4-devel gtk4-layer-shell-devel \
+              pulseaudio-libs-devel pkgconf-pkg-config \
+              git ca-certificates systemd-devel
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build release binary
+        shell: bash
+        run: cargo build --release
+
+      - name: Prepare binary
+        shell: bash
+        run: |
+          mkdir -p dist
+          install -Dm755 target/release/vibepanel \
+            "dist/vibepanel-${{ matrix.distro }}-x86_64"
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/vibepanel-${{ matrix.distro }}-x86_64
+          if-no-files-found: error
+          retention-days: 30
+
