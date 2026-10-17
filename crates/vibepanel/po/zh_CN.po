@@ -18,142 +18,116 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Tile"
 msgstr "平铺"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Scroller"
 msgstr "滚动"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Grid"
 msgstr "网格"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Monocle"
 msgstr "单窗口"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Deck"
 msgstr "堆叠"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Center Tile"
 msgstr "居中平铺"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Right Tile"
 msgstr "右侧平铺"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Vertical Scroller"
 msgstr "垂直滚动"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Vertical Tile"
 msgstr "垂直平铺"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Vertical Grid"
 msgstr "垂直网格"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Vertical Deck"
 msgstr "垂直堆叠"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Dwindle"
 msgstr "螺旋"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Fair"
 msgstr "均分"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/compositor/mango_layouts.rs
 msgid "Vertical Fair"
 msgstr "垂直均分"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/updates.rs
 msgid "Checking {source}..."
 msgstr "正在检查 {source}…"
 
-# TODO(zh-review): draft translation, please check
 #. Phase 1: Refresh repo metadata (this is the slow, network-bound part)
 #: ../src/services/updates.rs
 msgid "Refreshing dnf cache..."
 msgstr "正在刷新 dnf 缓存…"
 
-# TODO(zh-review): draft translation, please check
 #. Phase 2: Check for available upgrades against fresh cache
 #: ../src/services/updates.rs
 msgid "Checking for upgrades..."
 msgstr "正在检查升级…"
 
-# TODO(zh-review): draft translation, please check
 #. Check official repos with checkupdates
 #: ../src/services/updates.rs
 msgid "Checking official repos..."
 msgstr "正在检查官方仓库…"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Clear"
 msgstr "晴"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Partly cloudy"
 msgstr "局部多云"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Cloudy"
 msgstr "阴"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Fog"
 msgstr "雾"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Drizzle"
 msgstr "毛毛雨"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Rain"
 msgstr "雨"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Snow"
 msgstr "雪"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/services/weather.rs
 msgctxt "weather"
 msgid "Thunderstorm"
@@ -185,7 +159,6 @@ msgstr "已充满"
 msgid "Discharging"
 msgstr "放电中"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/battery.rs
 msgid ""
 "Battery: {pct}\n"
@@ -635,7 +608,6 @@ msgstr "认证"
 msgid "Authenticating as {user}"
 msgstr "正在以 {user} 身份认证"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/system_popover.rs
 msgid "{n} core"
 msgid_plural "{n} cores"
@@ -661,7 +633,6 @@ msgstr "GPU"
 msgid "VRAM"
 msgstr "显存"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/system_popover.rs
 msgctxt "gpu"
 msgid "Power"
@@ -827,12 +798,10 @@ msgstr "更新于：{last_update}"
 msgid "Data may be stale"
 msgstr "数据可能已过期"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/weather.rs
 msgid "Forecast {date}: {condition}, {low} / {high}, rain {rain}%"
 msgstr "预报 {date}：{condition}，{low} / {high}，降雨 {rain}%"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/weather.rs
 msgid "Forecast {date}: {condition}, {low} / {high}"
 msgstr "预报 {date}：{condition}，{low} / {high}"
@@ -901,7 +870,6 @@ msgstr "工作区 {name}"
 msgid "Workspace {idx}: {name}"
 msgstr "工作区 {idx}：{name}"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/workspaces.rs
 msgctxt "workspace"
 msgid "Active"
@@ -1215,48 +1183,39 @@ msgstr "没有可用的输入设备"
 msgid "Wrong password"
 msgstr "密码错误"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Connection failed"
 msgstr "连接失败"
 
-# TODO(zh-review): draft translation, please check
 #. Reasons reported by the IWD backend.
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Network not found"
 msgstr "未找到网络"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Not supported"
 msgstr "不支持"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Not configured"
 msgstr "未配置"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Permission denied"
 msgstr "权限被拒绝"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Not connected"
 msgstr "未连接"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Authentication timed out"
 msgstr "认证超时"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Network out of range"
 msgstr "网络超出范围"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/network_card.rs
 msgid "Enterprise WiFi not supported"
 msgstr "不支持企业 Wi-Fi"
@@ -1319,27 +1278,22 @@ msgstr "输入 {ssid} 的密码"
 msgid "Connecting"
 msgstr "正在连接"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/power_card.rs
 msgid "Shut Down"
 msgstr "关机"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/power_card.rs
 msgid "Reboot"
 msgstr "重启"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/power_card.rs
 msgid "Suspend"
 msgstr "挂起"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/power_card.rs
 msgid "Lock"
 msgstr "锁定"
 
-# TODO(zh-review): draft translation, please check
 #: ../src/widgets/quick_settings/power_card.rs
 msgid "Log Out"
 msgstr "注销"
